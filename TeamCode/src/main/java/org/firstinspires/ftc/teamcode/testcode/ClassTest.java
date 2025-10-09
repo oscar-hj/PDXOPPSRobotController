@@ -1,39 +1,43 @@
 package org.firstinspires.ftc.teamcode.testcode;
 
-import org.firstinspires.ftc.teamcode.teleop.DriveTrain;
+import org.firstinspires.ftc.teamcode.utils.DriveTrain;
+import org.firstinspires.ftc.teamcode.utils.GP;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Class Test")
 public class ClassTest extends LinearOpMode {
-    double motorSpeedgp1, motorSpeedgp2, slowSpeed = 0.1, normSpeed = 0.5, boostSpeed = 1;
-
     @Override
     public void runOpMode(){
-        DriveTrain driveTrain = new DriveTrain(hardwareMap);
+        // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
+        // initializes motors and PedroPathing follower (for tracking pose).
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
+        driveTrain.loadPose();
         driveTrain.initMotors();
+
+        // makes 2 gamepad objects for gp1 and gp2
+        GP gp1 = new GP(gamepad1);
+        GP gp2 = new GP(gamepad2);
 
         waitForStart();
         if(opModeIsActive()){
             while (opModeIsActive()){
-
-                // sets the drive speed multiplier
-                if(gamepad1.left_bumper){
-                    motorSpeedgp1 = slowSpeed;
-                } else if (gamepad1.right_bumper) {
-                    motorSpeedgp1 = boostSpeed;
-                } else {
-                    motorSpeedgp1 = normSpeed;
-                }
+                // reads controllers and updates the pose
+                gp1.readGP();
+                gp2.readGP();
+                driveTrain.updatePose(telemetry);
 
                 // 2D Drive
-                driveTrain.Drive2D(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x, motorSpeedgp1);
+                driveTrain.Drive2D();
 
 
-                driveTrain.updatePedro(telemetry);
+                // updates telemetry
                 telemetry.update();
             }
+
+            // saves the pose to use in another program
+            driveTrain.savePose();
         }
     }
 

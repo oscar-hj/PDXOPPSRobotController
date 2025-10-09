@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 public class AutoTest extends OpMode {
 
     private Follower follower;
-    private Timer pathTimer, actionTimer, opmodeTimer;
+    private Timer pathTimer, opmodeTimer;
     private int pathState;
 
 
@@ -81,7 +81,11 @@ public class AutoTest extends OpMode {
     }
 
     @Override
-    public void init_loop(){}
+    public void init_loop(){
+        telemetry.addLine("Program: Auto Test");
+        telemetry.addLine("Initialized!");
+        telemetry.update();
+    }
 
     @Override
     public void start(){
