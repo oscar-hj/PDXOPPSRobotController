@@ -7,20 +7,20 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 
-@Autonomous(name = "test")
-public class test extends OpMode {
+@Autonomous(name = "AutoTest")
+public class AutoTest extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;
 
 
-    private Pose startPose = new Pose(0, 0, 0);
-    private Pose midPose = new Pose(12, 12, Math.toRadians(90));
-    private Pose endPose = new Pose(0, 0, Math.toRadians(180));
+    private final Pose startPose = new Pose(0, 0, 0);
+    private final Pose midPose = new Pose(12, 12, Math.toRadians(90));
+    private final Pose endPose = new Pose(0, 0, Math.toRadians(180));
 
 
     private Path move1;
