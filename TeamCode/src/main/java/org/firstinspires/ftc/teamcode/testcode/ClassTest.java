@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.testcode;
 
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
+import org.firstinspires.ftc.teamcode.utils.Attachments;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,8 +14,10 @@ public class ClassTest extends LinearOpMode {
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
         // initializes motors and PedroPathing follower (for tracking pose).
         DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
-        driveTrain.loadPose();
         driveTrain.initMotors();
+
+        Attachments attachments = new Attachments(hardwareMap);
+        attachments.initAttachments();
 
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
@@ -31,6 +34,12 @@ public class ClassTest extends LinearOpMode {
                 // 2D Drive
                 driveTrain.Drive2D();
 
+
+                if(gp1.A){
+                    attachments.activateOuttake();
+                } else if (gp1.B){
+                    attachments.deactivateOuttake();
+                }
 
                 // updates telemetry
                 telemetry.update();

@@ -24,9 +24,9 @@ import com.pedropathing.geometry.Pose;
 
 public class DriveTrain {
     public Follower follower;
-    public HardwareMap hardwareMap;
+    public static HardwareMap hardwareMap;
     public Gamepad gamepad;
-    DcMotor frontLeft, frontRight, backLeft, backRight;
+    public static DcMotor frontLeft, frontRight, backLeft, backRight;
 
     /**
      * Initialize the Method inside the runOpMode method
@@ -35,7 +35,7 @@ public class DriveTrain {
      * @param gp1           Takes the gamepad that is used to drive the robot (gamepad1)
      */
     public DriveTrain(HardwareMap hardwareMap, Gamepad gp1) {
-        this.hardwareMap = hardwareMap;
+        DriveTrain.hardwareMap = hardwareMap;
         this.gamepad = gp1;
     }
 
@@ -43,6 +43,10 @@ public class DriveTrain {
      * Initializes the motors using the names; fl, fr, bl, br.
      */
     public void initMotors(){
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(loadPose());
+        follower.update();
+
         frontLeft = hardwareMap.get(DcMotor.class, "fl");
         frontRight = hardwareMap.get(DcMotor.class, "fr");
         backLeft = hardwareMap.get(DcMotor.class, "bl");
@@ -61,15 +65,11 @@ public class DriveTrain {
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(loadPose());
-        follower.startTeleopDrive();
-        follower.update();
     }
 
     /**
      * Control:
-     * <p>
+     * <p></p>
      * Left stick drives the robot front, back, side to side, and diagonally. Right stick rotates
      * the robot. Left bumper activates slow mode, right bumper activates boost mode.
      */
