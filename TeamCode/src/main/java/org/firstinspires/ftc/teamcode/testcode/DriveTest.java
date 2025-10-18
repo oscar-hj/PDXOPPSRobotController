@@ -1,14 +1,14 @@
 package org.firstinspires.ftc.teamcode.testcode;
 
-import org.firstinspires.ftc.teamcode.utils.DriveTrain;
-import org.firstinspires.ftc.teamcode.utils.GP;
-import org.firstinspires.ftc.teamcode.utils.Attachments;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "Class Test")
-public class ClassTest extends LinearOpMode {
+import org.firstinspires.ftc.teamcode.utils.Attachments;
+import org.firstinspires.ftc.teamcode.utils.DriveTrain;
+import org.firstinspires.ftc.teamcode.utils.GP;
+
+@TeleOp(name = "Drive Test")
+public class DriveTest extends LinearOpMode {
     @Override
     public void runOpMode(){
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
@@ -32,18 +32,13 @@ public class ClassTest extends LinearOpMode {
                 driveTrain.updatePose(telemetry);
 
                 // 2D Drive
-                driveTrain.Drive2DField();
+                driveTrain.Drive2D();
 
 
                 if(gp1.A){
-                    attachments.runOuttake(6000);
+                    attachments.runOuttake(1);
                 } else if (gp1.B){
                     attachments.runOuttake(0);
-                }
-
-                if(gp1.PS){
-                    driveTrain.resetPose();
-                    driveTrain.follower.setPose(driveTrain.loadPose());
                 }
 
                 // updates telemetry
