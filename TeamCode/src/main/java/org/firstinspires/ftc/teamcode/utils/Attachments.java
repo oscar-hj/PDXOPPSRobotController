@@ -1,22 +1,25 @@
 package org.firstinspires.ftc.teamcode.utils;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 public class Attachments {
     HardwareMap hardwareMap;
-    DcMotor outtakeMotorLeft, outtakeMotorRight;
+    DcMotorEx outtakeMotorLeft, outtakeMotorRight;
     public Attachments(HardwareMap hwMp){
         this.hardwareMap = hwMp;
     }
 
     public void initAttachments(){
-        outtakeMotorLeft = hardwareMap.get(DcMotor.class, "oml");
-        outtakeMotorRight = hardwareMap.get(DcMotor.class, "omr");
+        outtakeMotorLeft = hardwareMap.get(DcMotorEx.class, "oml");
+        outtakeMotorRight = hardwareMap.get(DcMotorEx.class, "omr");
 
-        outtakeMotorLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        outtakeMotorRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        outtakeMotorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        outtakeMotorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         outtakeMotorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -25,13 +28,13 @@ public class Attachments {
     }
 
 
-    public void activateOuttake(){
-        outtakeMotorLeft.setPower(1);
-        outtakeMotorRight.setPower(1);
+    /**
+        @param rpm in rotations per second
+     */
+    public void runOuttake(double rpm){
+        rpm *= 6;
+        outtakeMotorLeft.setVelocity(rpm, AngleUnit.DEGREES);
+        outtakeMotorRight.setVelocity(rpm, AngleUnit.DEGREES);
     }
 
-    public void deactivateOuttake(){
-        outtakeMotorLeft.setPower(0);
-        outtakeMotorRight.setPower(0);
-    }
 }

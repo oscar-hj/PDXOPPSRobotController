@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 public class GP {
     public Gamepad gamepad;
     public double LSX, LSY, RSX, RSY, LT, RT;
-    public boolean X, Y, A, B, LB, RB;
+    public boolean X, Y, A, B, LB, RB, PS;
 
     public GP(Gamepad gp){
         this.gamepad = gp;
@@ -24,5 +24,6 @@ public class GP {
         B = gamepad.b;
         LB = gamepad.left_bumper;
         RB = gamepad.right_bumper;
+        PS = gamepad.ps;
     }
 }
