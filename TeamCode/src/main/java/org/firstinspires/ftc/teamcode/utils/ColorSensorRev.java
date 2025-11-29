@@ -14,6 +14,8 @@ public class ColorSensorRev {
         RED,
         BLUE,
         YELLOW,
+        GREEN,
+        PURPLE,
         UNKNOWN
     }
 
@@ -52,6 +54,12 @@ public class ColorSensorRev {
         }
         else if (normRed < 0.2 && normGreen < 0.5 && normBlue > 0.5) {
             return DetectedColor.BLUE;
+        }
+        else if (normRed > 0.2 && normGreen < 0.45 && normBlue > 0.4) {
+            return DetectedColor.PURPLE;
+        }
+        else if (normRed < 0.2 && normGreen > 0.35 && normBlue < 0.4) {
+            return DetectedColor.GREEN;
         }
         else {
 
