@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.testcode;
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
 import org.firstinspires.ftc.teamcode.utils.Attachments;
+import org.firstinspires.ftc.teamcode.utils.Intake;
+import org.firstinspires.ftc.teamcode.utils.Shooter;
+import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -14,10 +17,19 @@ public class ClassTest extends LinearOpMode {
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
         // initializes motors and PedroPathing follower (for tracking pose).
         DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
-        driveTrain.initMotors();
+        driveTrain.initMotors("fl", "fr", "bl", "br");
 
-        Attachments attachments = new Attachments(hardwareMap);
-        attachments.initAttachments();
+        // initialize the intake class
+        Intake intake = new Intake(hardwareMap, telemetry);
+        intake.init("intakeMotor");
+
+        // initialize the spindex class
+        Spindex spindex = new Spindex(hardwareMap, telemetry);
+        spindex.init("spinServo", "LTServo", "HTServo");
+
+        // initialize the shooter class
+        Shooter shooter = new Shooter(hardwareMap, telemetry);
+        shooter.init("shooter");
 
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
@@ -31,14 +43,12 @@ public class ClassTest extends LinearOpMode {
                 gp2.readGP();
                 driveTrain.updatePose(telemetry);
 
-                // 2D Drive
+                // 2D Drive, field oriented
                 driveTrain.Drive2DField();
 
 
-                if(gp1.A){
-                    attachments.runOuttake(6000);
-                } else if (gp1.B){
-                    attachments.runOuttake(0);
+                if(gp1.PS){
+                    shooter.primeShooter(6000);
                 }
 
                 if(gp1.PS){

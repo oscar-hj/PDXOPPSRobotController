@@ -32,6 +32,7 @@ public class DriveTrain {
     public static HardwareMap hardwareMap;
     public Gamepad gamepad;
     public static DcMotor frontLeft, frontRight, backLeft, backRight;
+    public static double deadzone = 0.05;
 
     /**
      * Initialize the Method inside the runOpMode method
@@ -47,15 +48,15 @@ public class DriveTrain {
     /**
      * Initializes the motors using the names; fl, fr, bl, br.
      */
-    public void initMotors(){
+    public void initMotors(String FLM_NAME, String FRM_NAME, String BLM_NAME, String BRM_NAME){
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(loadPose());
         follower.update();
 
-        frontLeft = hardwareMap.get(DcMotor.class, "fl");
-        frontRight = hardwareMap.get(DcMotor.class, "fr");
-        backLeft = hardwareMap.get(DcMotor.class, "bl");
-        backRight = hardwareMap.get(DcMotor.class, "br");
+        frontLeft = hardwareMap.get(DcMotor.class, FLM_NAME);
+        frontRight = hardwareMap.get(DcMotor.class, FRM_NAME);
+        backLeft = hardwareMap.get(DcMotor.class, BLM_NAME);
+        backRight = hardwareMap.get(DcMotor.class, BRM_NAME);
 
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -80,7 +81,6 @@ public class DriveTrain {
      */
     public void Drive2D(){
         double speed;
-        double deadzone = 0.05;
         double valx = gamepad.left_stick_x;
         double valy = gamepad.left_stick_y;
         double valr = gamepad.right_stick_x;
@@ -111,7 +111,6 @@ public class DriveTrain {
 
     public void Drive2DField(){
         double speed;
-        double deadzone = 0.05;
         double valx = gamepad.left_stick_x;
         double valy = gamepad.left_stick_y;
         double valr = gamepad.right_stick_x;
@@ -150,7 +149,6 @@ public class DriveTrain {
 
     public void Drive2DFieldFreeLook(){
         double speed;
-        double deadzone = 0.05;
         double valx = gamepad.left_stick_x;
         double valy = gamepad.left_stick_y;
         double valrx = gamepad.right_stick_x;

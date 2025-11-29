@@ -14,7 +14,7 @@ public class DriveTest extends LinearOpMode {
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
         // initializes motors and PedroPathing follower (for tracking pose).
         DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
-        driveTrain.initMotors();
+        driveTrain.initMotors("fl", "fr", "bl", "br");
 
         Attachments attachments = new Attachments(hardwareMap);
         attachments.initAttachments();
