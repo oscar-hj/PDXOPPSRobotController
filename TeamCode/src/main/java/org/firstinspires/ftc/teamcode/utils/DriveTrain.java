@@ -28,8 +28,14 @@ import com.pedropathing.geometry.Pose;
 
 
 public class DriveTrain {
+    public enum DriveMode{
+        OP_DRIVE,
+        AUTO_POS
+    }
+    public DriveMode driveMode;
     public Follower follower;
-    public static HardwareMap hardwareMap;
+    public HardwareMap hardwareMap;
+    public Telemetry telemetry;
     public Gamepad gamepad;
     public static DcMotor frontLeft, frontRight, backLeft, backRight;
     public static double deadzone = 0.05;
@@ -37,18 +43,25 @@ public class DriveTrain {
     /**
      * Initialize the Method inside the runOpMode method
      *
-     * @param hardwareMap   Takes the hardwareMap of the robot
-     * @param gp1           Takes the gamepad that is used to drive the robot (gamepad1)
+     * @param hwMap   Takes the hardwareMap of the robot
+     * @param gp1     Takes the gamepad that is used to drive the robot (gamepad1)
+     * @param tel     Takes the telemetry for the opMode
      */
-    public DriveTrain(HardwareMap hardwareMap, Gamepad gp1) {
-        DriveTrain.hardwareMap = hardwareMap;
+    public DriveTrain(HardwareMap hwMap, Gamepad gp1, Telemetry tel) {
+        this.hardwareMap = hwMap;
         this.gamepad = gp1;
+        this.telemetry = tel;
     }
 
     /**
-     * Initializes the motors using the names; fl, fr, bl, br.
+     * Initializes the motors
+     *
+     * @param FLM_NAME Name for Front Left Motor
+     * @param FRM_NAME Name for Front Right Motor
+     * @param BLM_NAME Name for Back Left Motor
+     * @param BRM_NAME Name for Back Right Motor
      */
-    public void initMotors(String FLM_NAME, String FRM_NAME, String BLM_NAME, String BRM_NAME){
+    public void init(String FLM_NAME, String FRM_NAME, String BLM_NAME, String BRM_NAME){
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(loadPose());
         follower.update();
@@ -71,6 +84,7 @@ public class DriveTrain {
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        driveMode = DriveMode.OP_DRIVE;
     }
 
     /**
@@ -192,7 +206,7 @@ public class DriveTrain {
     }
 
 
-    public void updatePose(Telemetry telemetry){
+    public void updatePose(){
         follower.update();
         telemetry.addData("Pose", follower.getPose());
     }

@@ -13,8 +13,8 @@ public class DriveTest extends LinearOpMode {
     public void runOpMode(){
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
         // initializes motors and PedroPathing follower (for tracking pose).
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
-        driveTrain.initMotors("fl", "fr", "bl", "br");
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        driveTrain.init("fl", "fr", "bl", "br");
 
         Attachments attachments = new Attachments(hardwareMap);
         attachments.initAttachments();
@@ -29,7 +29,7 @@ public class DriveTest extends LinearOpMode {
                 // reads controllers and updates the pose
                 gp1.readGP();
                 gp2.readGP();
-                driveTrain.updatePose(telemetry);
+                driveTrain.updatePose();
 
                 // 2D Drive
                 driveTrain.Drive2D();

@@ -12,16 +12,18 @@ public class Shooter {
     HardwareMap hardwareMap;
     Telemetry telemetry;
     DcMotorEx shooterMotor;
-    Servo hoodAngle;
+    Servo hoodAngleServo;
     public Shooter(HardwareMap hwm, Telemetry tel){
         this.hardwareMap = hwm;
         this.telemetry = tel;
     }
 
-    public void init(String motorName){
+    public void init(String motorName, String hoodServoName){
         shooterMotor = hardwareMap.get(DcMotorEx.class, motorName);
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        hoodAngleServo = hardwareMap.get(Servo.class, hoodServoName);
     }
 
     public void primeShooter(int rpm){
@@ -31,7 +33,7 @@ public class Shooter {
     
     public void changeAngle(double angle){
         double targetAngle = (angle - 3) / 42.0;
-        hoodAngle.setPosition(targetAngle);
+        hoodAngleServo.setPosition(targetAngle);
     }
 
     public double getRPM(){

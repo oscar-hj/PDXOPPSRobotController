@@ -17,11 +17,6 @@ public class Intake {
         INTAKE_OFF,
         INTAKE_BACKWARDS
     }
-    public enum SwitchState{
-        ACTIVATE,
-        DEACTIVATE,
-        ACTIVATE_BACKWARDS
-    }
 
     public Intake(HardwareMap hwm, Telemetry tel){
         this.hardwareMap = hwm;
@@ -34,24 +29,19 @@ public class Intake {
         intakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
-    public void changeIntakeState(SwitchState intakeState){
-        switch (intakeState){
-            case ACTIVATE:
-                intakeMotor.setPower(1);
-                state = IntakeState.INTAKE_ON;
-                telemetry.addData("Intake Mode", "On");
-                break;
-            case DEACTIVATE:
-                intakeMotor.setPower(0);
-                state = IntakeState.INTAKE_OFF;
-                telemetry.addData("Intake Mode", "Off");
-                break;
-            case ACTIVATE_BACKWARDS:
-                intakeMotor.setPower(-1);
-                state = IntakeState.INTAKE_BACKWARDS;
-                telemetry.addData("Intake Mode", "Backwards");
-                break;
-        }
-
+    public void forwardIntake(){
+        intakeMotor.setPower(1);
+        state = IntakeState.INTAKE_ON;
     }
+
+    public void backwardsIntake(){
+        intakeMotor.setPower(-1);
+        state = IntakeState.INTAKE_BACKWARDS;
+    }
+
+    public void stopIntake(){
+        intakeMotor.setPower(0);
+        state = IntakeState.INTAKE_OFF;
+    }
+
 }

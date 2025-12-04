@@ -62,7 +62,6 @@ public class ColorSensorRev {
             return DetectedColor.GREEN;
         }
         else {
-
             return DetectedColor.UNKNOWN;
         }
 
