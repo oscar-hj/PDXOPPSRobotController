@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode.testcode;
 
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
-import org.firstinspires.ftc.teamcode.utils.Attachments;
+import org.firstinspires.ftc.teamcode.utils.Intake;
+import org.firstinspires.ftc.teamcode.utils.Shooter;
+import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,11 +15,20 @@ public class ClassTest extends LinearOpMode {
     public void runOpMode(){
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
         // initializes motors and PedroPathing follower (for tracking pose).
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
-        driveTrain.initMotors();
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        driveTrain.init("fl", "fr", "bl", "br");
 
-        Attachments attachments = new Attachments(hardwareMap);
-        attachments.initAttachments();
+        // initialize the intake class
+        Intake intake = new Intake(hardwareMap, telemetry);
+        intake.init("intakeMotor");
+
+        // initialize the spindex class
+        Spindex spindex = new Spindex(hardwareMap, telemetry);
+        spindex.init("spinServo", "LTServo", "HTServo");
+
+        // initialize the shooter class
+        Shooter shooter = new Shooter(hardwareMap, telemetry);
+        shooter.init("shooterMotor", "hoodServo");
 
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
@@ -29,22 +40,21 @@ public class ClassTest extends LinearOpMode {
                 // reads controllers and updates the pose
                 gp1.readGP();
                 gp2.readGP();
-                driveTrain.updatePose(telemetry);
+                driveTrain.updatePose();
 
-                // 2D Drive
-                driveTrain.Drive2DField();
+                // 2D Drive, field oriented
+                driveTrain.Drive2DFieldFreeLook();
 
-
-                if(gp1.A){
-                    attachments.runOuttake(6000);
-                } else if (gp1.B){
-                    attachments.runOuttake(0);
-                }
-
+                // When PS is pressed, prime shooter and move to the shooting point
                 if(gp1.PS){
-                    driveTrain.resetPose();
-                    driveTrain.follower.setPose(driveTrain.loadPose());
+                    shooter.primeShooter(6000);
+                    //TODO: Add function for
                 }
+
+//                if(gp1.PS){
+//                    driveTrain.resetPose();
+//                    driveTrain.follower.setPose(driveTrain.loadPose());
+//                }
 
                 // updates telemetry
                 driveTrain.printMotorTelemetry(telemetry);
