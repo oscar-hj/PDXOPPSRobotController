@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -12,11 +14,13 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 @TeleOp(name = "MainTeleOp_2GP")
 public class MainTeleOp_2GP extends LinearOpMode {
-    GP gp1 = new GP(gamepad1);
-    GP gp2 = new GP(gamepad2);
 
     @Override
     public void runOpMode() {
+        // Initialize controllers
+        GP gp1 = new GP(gamepad1);
+        GP gp2 = new GP(gamepad2);
+
         // Initialize drive train
         DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
         driveTrain.init("fl", "fr", "bl", "br");
@@ -27,7 +31,7 @@ public class MainTeleOp_2GP extends LinearOpMode {
 
         // Initialize spindex
         Spindex spindex = new Spindex(hardwareMap, telemetry);
-        spindex.init("spinServo", "LTServo", "HTServo");
+        spindex.init("spinMotor", "transferServo", "colorSensor", "magneticSwitch");
 
         // Initialize Shooter
         Shooter shooter = new Shooter(hardwareMap, telemetry);
@@ -45,22 +49,38 @@ public class MainTeleOp_2GP extends LinearOpMode {
                 // Check driveMode of Drivetrain for auto position or operator driving
                 if(driveTrain.driveMode == DriveTrain.DriveMode.OP_DRIVE){
                     // Runs driving function on gp1
-                    driveTrain.Drive2DFieldFreeLook();
+                    driveTrain.Drive2D();
 
                     // Runs spindex
-                    spindex.intakeSpindex(true);
+                    // spindex.intakeSpindex(true);
 
                     // Manually activate/deactivate intake
                     if(gp2.A){
                         intake.forwardIntake();
                     }else if(gp2.B){
-                        intake.stopIntake();
-                    }else if(gp2.Y){
                         intake.backwardsIntake();
+                    }else {
+                        intake.stopIntake();
                     }
 
+                    // Shooter functions
                     if(gp1.A){
-                        shooter.primeShooter(6000);
+                        shooter.primeShooter(10000);
+                    } else if(gp1.B){
+                        shooter.primeShooter(0);
+                    }
+
+                    if(gp1.LT > 0.1){
+                        shooter.manualHoodAngle(gp1.LT);
+                    } else if(gp1.RT > 0.1){
+                        shooter.manualHoodAngle(gp1.RT);
+                    }
+
+                    // Spindex functions
+                    if(abs(gp2.LSX) > 0.1){
+                        spindex.manualSpindex(gp2.LSX);
+                    }else{
+                        spindex.manualSpindex(0);
                     }
 
                     if(gp1.DPU){

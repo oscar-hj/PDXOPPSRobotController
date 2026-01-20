@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.utils;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -12,7 +13,7 @@ public class Shooter {
     HardwareMap hardwareMap;
     Telemetry telemetry;
     DcMotorEx shooterMotor;
-    Servo hoodAngleServo;
+    CRServo hoodAngleServo;
     public Shooter(HardwareMap hwm, Telemetry tel){
         this.hardwareMap = hwm;
         this.telemetry = tel;
@@ -23,17 +24,26 @@ public class Shooter {
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        hoodAngleServo = hardwareMap.get(Servo.class, hoodServoName);
+        hoodAngleServo = hardwareMap.get(CRServo.class, hoodServoName);
     }
 
-    public void primeShooter(int rpm){
-        rpm *= 6;
-        shooterMotor.setVelocity(rpm);
+    public void primeShooter(double rpm){
+        rpm *= 28.0;
+        rpm /= 60.0;
+
+        telemetry.addData("Shooter Motor TPS", shooterMotor.getVelocity());
+        telemetry.addData("Shooter Motor RPM", (shooterMotor.getVelocity()/28.0) * 60);
+
+        shooterMotor.setVelocity(-rpm);
     }
     
-    public void changeAngle(double angle){
+    public void hoodAngle(double angle){
         double targetAngle = (angle - 3) / 42.0;
-        hoodAngleServo.setPosition(targetAngle);
+//        hoodAngleServo.setPosition(targetAngle);
+    }
+
+    public void manualHoodAngle(double power){
+        hoodAngleServo.setPower(power);
     }
 
     public double getRPM(){

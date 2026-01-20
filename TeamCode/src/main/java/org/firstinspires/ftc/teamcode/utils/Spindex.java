@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode.utils;
 import org.firstinspires.ftc.teamcode.utils.ColorSensorRev.DetectedColor;
 
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -16,14 +18,18 @@ public class Spindex {
         OUT2,
         OUT3;
     }
-
+    public int homePos = 0;
+    
+    // The list goes: store position 1 2 3 and then outtake position 1 2 3
+    public int[] spindexEncoderOffsets = {0, 0, 0, 0, 0, 0};
     public DetectedColor[] memorizedStorage = {DetectedColor.UNKNOWN, DetectedColor.UNKNOWN, DetectedColor.UNKNOWN};
     public SpindexState spindexState;
 
     HardwareMap hardwareMap;
     Telemetry telemetry;
-    Servo spinServo;
-    CRServo lowTransServo, highTransServo;
+    DcMotorEx spinMotor;
+    CRServo transferServo;
+    TouchSensor magneticSwitch;
     ColorSensorRev colorSensor = new ColorSensorRev();
 
     public Spindex(HardwareMap hwMp, Telemetry tele){
@@ -31,46 +37,49 @@ public class Spindex {
         telemetry = tele;
     }
 
-    public void init(String spinServoName, String lowTransferServoName, String highTransferServoName){
-        spinServo = hardwareMap.get(Servo.class, spinServoName);
-        setPosition(SpindexState.STORE1);
+    public void init(String spinMotorName, String transferServoName, String colorSensorName, String magneticSwitchName){
+        spinMotor = hardwareMap.get(DcMotorEx.class, spinMotorName);
+        magneticSwitch = hardwareMap.get(TouchSensor.class, magneticSwitchName);
+        transferServo = hardwareMap.get(CRServo.class, transferServoName);
 
-        lowTransServo = hardwareMap.get(CRServo.class, lowTransferServoName);
-        highTransServo = hardwareMap.get(CRServo.class, highTransferServoName);
-        colorSensor.init(hardwareMap, "colorSensor");
+        spinMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        spinMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        homeSpindex();
+//        gotoPosition(SpindexState.STORE1);
+
+        colorSensor.init(hardwareMap, colorSensorName);
+    }
+
+    /*
+     *    Spindex Methods
+     */
+
+    public void homeSpindex(){
+        spinMotor.setPower(-0.1);
+        while (!magneticSwitch.isPressed()){
+            telemetry.addLine("Homing...");
+            telemetry.update();
+        }
+        spinMotor.setPower(0);
+        homePos = spinMotor.getCurrentPosition();
     }
 
     public void intakeSpindex(boolean fastMode){
         // detect current color
         DetectedColor detectedColor = colorSensor.getDetectedColor(telemetry);
 
-        // get storage index
-        int storageIndex;
-        switch (spindexState){
-            case STORE1:
-                storageIndex = 0;
-                break;
-            case STORE2:
-                storageIndex = 1;
-                break;
-            case STORE3:
-                storageIndex = 2;
-                break;
-            default:
-                return;
-        }
 
         // If color is detected, set color of ball into the memorized storage
         switch (detectedColor){
             case BLUE:
-                this.memorizedStorage[storageIndex] = DetectedColor.BLUE;
+                this.memorizedStorage[spindexState.ordinal()] = DetectedColor.BLUE;
                 break;
             case GREEN:
-                this.memorizedStorage[storageIndex] = DetectedColor.GREEN;
+                this.memorizedStorage[spindexState.ordinal()] = DetectedColor.GREEN;
                 break;
             case UNKNOWN:
                 if(fastMode){
-                    this.memorizedStorage[storageIndex] = DetectedColor.UNKNOWN;
+                    this.memorizedStorage[spindexState.ordinal()] = DetectedColor.UNKNOWN;
                     telemetry.addLine("Color indexed as unknown");
                 }else{
                     telemetry.addLine("Color not found.");
@@ -82,44 +91,30 @@ public class Spindex {
         }
     }
 
-    public void setPosition(SpindexState targetState){
-        // TODO: Change servo positions
-        switch (targetState){
-            case STORE1:
-                spinServo.setPosition(0.1);
-                break;
-            case STORE2:
-                spinServo.setPosition(0.2);
-                break;
-            case STORE3:
-                spinServo.setPosition(0.3);
-                break;
-            case OUT1:
-                spinServo.setPosition(0.4);
-                break;
-            case OUT2:
-                spinServo.setPosition(0.5);
-                break;
-            case OUT3:
-                spinServo.setPosition(0.6);
-                break;
-        }
-        this.spindexState = targetState;
+    public void gotoPosition(SpindexState targetState){
+        spinMotor.setTargetPosition(homePos + spindexEncoderOffsets[targetState.ordinal()]);
     }
 
+    public void manualSpindex(double direction){
+        spinMotor.setPower(direction);
+        telemetry.addData("Encoder Value", spinMotor.getCurrentPosition());
+        telemetry.addData("Spindex Power", spinMotor.getPower());
+        telemetry.addData("Switch Value", magneticSwitch.getValue());
+    }
+
+    /*
+     *  Transfer Methods
+     */
     public void activateTransfer(boolean direction){
         if (direction){
-            lowTransServo.setPower(1);
-            highTransServo.setPower(1);
+            transferServo.setPower(-1);
         }else{
-            lowTransServo.setPower(-1);
-            highTransServo.setPower(-1);
+            transferServo.setPower(1);
         }
     }
 
     public void deactivateTransfer(){
-        lowTransServo.setPower(0);
-        highTransServo.setPower(0);
+        transferServo.setPower(0);
     }
 
     public void setStorage(DetectedColor pos1, DetectedColor pos2, DetectedColor pos3){

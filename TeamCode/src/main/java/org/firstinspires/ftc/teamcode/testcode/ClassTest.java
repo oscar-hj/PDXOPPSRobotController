@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.testcode;
 
+import static java.lang.Math.abs;
+
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
 import org.firstinspires.ftc.teamcode.utils.Intake;
@@ -24,7 +26,7 @@ public class ClassTest extends LinearOpMode {
 
         // initialize the spindex class
         Spindex spindex = new Spindex(hardwareMap, telemetry);
-        spindex.init("spinServo", "LTServo", "HTServo");
+        spindex.init("spinMotor", "transferServo", "colorSensor", "magneticSwitch");
 
         // initialize the shooter class
         Shooter shooter = new Shooter(hardwareMap, telemetry);
@@ -37,27 +39,61 @@ public class ClassTest extends LinearOpMode {
         waitForStart();
         if(opModeIsActive()){
             while (opModeIsActive()){
-                // reads controllers and updates the pose
+                //reads the gamepad inputs and assigns them to variables
                 gp1.readGP();
                 gp2.readGP();
-                driveTrain.updatePose();
 
-                // 2D Drive, field oriented
-                driveTrain.Drive2DFieldFreeLook();
+                // Check driveMode of Drivetrain for auto position or operator driving
+                if(driveTrain.driveMode == DriveTrain.DriveMode.OP_DRIVE){
+                    // Runs driving function on gp1
+                    driveTrain.Drive2D();
 
-                // When PS is pressed, prime shooter and move to the shooting point
-                if(gp1.PS){
-                    shooter.primeShooter(6000);
-                    //TODO: Add function for
+                    // Runs spindex
+                    // spindex.intakeSpindex(true);
+
+                    // Manually activate/deactivate intake
+                    if(gp2.A){
+                        intake.forwardIntake();
+                    }else if(gp2.B){
+                        intake.backwardsIntake();
+                    }else {
+                        intake.stopIntake();
+                    }
+
+                    // Shooter functions
+                    if(gp1.A){
+                        shooter.primeShooter(10000);
+                    } else if(gp1.B){
+                        shooter.primeShooter(0);
+                    }
+
+                    if(gp1.LT > 0.1){
+                        shooter.manualHoodAngle(gp1.LT);
+                    } else if(gp1.RT > 0.1){
+                        shooter.manualHoodAngle(gp1.RT);
+                    }
+
+                    // Spindex functions
+                    if(abs(gp2.LSX) > 0.1){
+                        spindex.manualSpindex(gp2.LSX);
+                    }else{
+                        spindex.manualSpindex(0);
+                    }
+
+                    if(gp1.DPU){
+                        spindex.activateTransfer(true);
+                    }else if(gp1.DPD){
+                        spindex.activateTransfer(false);
+                    }else{
+                        spindex.deactivateTransfer();
+                    }
+
+                }else{
+                    // AUTO is on to auto drive the robot to the shooting place
+                    // TODO: Add functionality to auto drive robot to shooting place
                 }
 
-//                if(gp1.PS){
-//                    driveTrain.resetPose();
-//                    driveTrain.follower.setPose(driveTrain.loadPose());
-//                }
 
-                // updates telemetry
-                driveTrain.printMotorTelemetry(telemetry);
                 telemetry.update();
             }
 
