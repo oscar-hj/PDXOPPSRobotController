@@ -1,8 +1,12 @@
 package org.firstinspires.ftc.teamcode.testcode;
 
+import static java.lang.Math.abs;
+
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
-import org.firstinspires.ftc.teamcode.utils.Attachments;
+import org.firstinspires.ftc.teamcode.utils.Intake;
+import org.firstinspires.ftc.teamcode.utils.Shooter;
+import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,11 +17,20 @@ public class ClassTest extends LinearOpMode {
     public void runOpMode(){
         // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
         // initializes motors and PedroPathing follower (for tracking pose).
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1);
-        driveTrain.initMotors();
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        driveTrain.init("fl", "fr", "bl", "br");
 
-        Attachments attachments = new Attachments(hardwareMap);
-        attachments.initAttachments();
+        // initialize the intake class
+        Intake intake = new Intake(hardwareMap, telemetry);
+        intake.init("intakeMotor");
+
+        // initialize the spindex class
+        Spindex spindex = new Spindex(hardwareMap, telemetry);
+        spindex.init("spinMotor", "transferServo", "colorSensor", "magneticSwitch");
+
+        // initialize the shooter class
+        Shooter shooter = new Shooter(hardwareMap, telemetry);
+        shooter.init("shooterMotor", "hoodServo");
 
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
@@ -26,28 +39,61 @@ public class ClassTest extends LinearOpMode {
         waitForStart();
         if(opModeIsActive()){
             while (opModeIsActive()){
-                // reads controllers and updates the pose
+                //reads the gamepad inputs and assigns them to variables
                 gp1.readGP();
                 gp2.readGP();
-                driveTrain.updatePose(telemetry);
 
-                // 2D Drive
-                driveTrain.Drive2DField();
+                // Check driveMode of Drivetrain for auto position or operator driving
+                if(driveTrain.driveMode == DriveTrain.DriveMode.OP_DRIVE){
+                    // Runs driving function on gp1
+                    driveTrain.Drive2D();
 
+                    // Runs spindex
+                    // spindex.intakeSpindex(true);
 
-                if(gp1.A){
-                    attachments.runOuttake(6000);
-                } else if (gp1.B){
-                    attachments.runOuttake(0);
+                    // Manually activate/deactivate intake
+                    if(gp2.A){
+                        intake.forwardIntake();
+                    }else if(gp2.B){
+                        intake.backwardsIntake();
+                    }else {
+                        intake.stopIntake();
+                    }
+
+                    // Shooter functions
+                    if(gp1.A){
+                        shooter.primeShooter(10000);
+                    } else if(gp1.B){
+                        shooter.primeShooter(0);
+                    }
+
+                    if(gp1.LT > 0.1){
+                        shooter.manualHoodAngle(gp1.LT);
+                    } else if(gp1.RT > 0.1){
+                        shooter.manualHoodAngle(gp1.RT);
+                    }
+
+                    // Spindex functions
+                    if(abs(gp2.LSX) > 0.1){
+                        spindex.manualSpindex(gp2.LSX);
+                    }else{
+                        spindex.manualSpindex(0);
+                    }
+
+                    if(gp1.DPU){
+                        spindex.activateTransfer(true);
+                    }else if(gp1.DPD){
+                        spindex.activateTransfer(false);
+                    }else{
+                        spindex.deactivateTransfer();
+                    }
+
+                }else{
+                    // AUTO is on to auto drive the robot to the shooting place
+                    // TODO: Add functionality to auto drive robot to shooting place
                 }
 
-                if(gp1.PS){
-                    driveTrain.resetPose();
-                    driveTrain.follower.setPose(driveTrain.loadPose());
-                }
 
-                // updates telemetry
-                driveTrain.printMotorTelemetry(telemetry);
                 telemetry.update();
             }
 
