@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "Class Test")
 public class ClassTest extends LinearOpMode {
@@ -25,8 +26,8 @@ public class ClassTest extends LinearOpMode {
         intake.init("intakeMotor");
 
         // initialize the spindex class
-        Spindex spindex = new Spindex(hardwareMap, telemetry);
-        spindex.init("spinMotor", "transferServo", "colorSensor", "magneticSwitch");
+        Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
+        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor");
 
         // initialize the shooter class
         Shooter shooter = new Shooter(hardwareMap, telemetry);
@@ -35,6 +36,8 @@ public class ClassTest extends LinearOpMode {
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
         GP gp2 = new GP(gamepad2);
+
+        ElapsedTime spindexTimer = new ElapsedTime();
 
         waitForStart();
         if(opModeIsActive()){
@@ -48,8 +51,8 @@ public class ClassTest extends LinearOpMode {
                     // Runs driving function on gp1
                     driveTrain.Drive2D();
 
-                    // Runs spindex
-                    // spindex.intakeSpindex(true);
+                    // Turn off shooter
+                    shooter.primeShooter(0);
 
                     // Manually activate/deactivate intake
                     if(gp2.A){
@@ -60,35 +63,21 @@ public class ClassTest extends LinearOpMode {
                         intake.stopIntake();
                     }
 
-                    // Shooter functions
-                    if(gp1.A){
-                        shooter.primeShooter(10000);
-                    } else if(gp1.B){
-                        shooter.primeShooter(0);
-                    }
-
-                    if(gp1.LT > 0.1){
-                        shooter.manualHoodAngle(gp1.LT);
-                    } else if(gp1.RT > 0.1){
-                        shooter.manualHoodAngle(gp1.RT);
-                    }
-
                     // Spindex functions
-                    if(abs(gp2.LSX) > 0.1){
-                        spindex.manualSpindex(gp2.LSX);
-                    }else{
-                        spindex.manualSpindex(0);
+                    spindex.intakeSpindex();
+                    spindex.goToPos(spindex.currentPos);
+                    telemetry.addData("Spindex State", spindex.spindexState);
+
+                }else if(driveTrain.driveMode == DriveTrain.DriveMode.AUTO_POS){
+                    // Runs driving function on gp1
+                    driveTrain.Drive2D();
+
+                    shooter.primeShooter(6000);
+
+                    if(gamepad1.a){
+                        spindex.shootSpindex();
                     }
 
-                    if(gp1.DPU){
-                        spindex.activateTransfer(true);
-                    }else if(gp1.DPD){
-                        spindex.activateTransfer(false);
-                    }else{
-                        spindex.deactivateTransfer();
-                    }
-
-                }else{
                     // AUTO is on to auto drive the robot to the shooting place
                     // TODO: Add functionality to auto drive robot to shooting place
                 }

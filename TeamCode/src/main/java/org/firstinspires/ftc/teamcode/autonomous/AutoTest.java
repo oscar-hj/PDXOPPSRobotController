@@ -9,9 +9,18 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.utils.Constants;
+import org.firstinspires.ftc.teamcode.utils.Intake;
+import org.firstinspires.ftc.teamcode.utils.Shooter;
+import org.firstinspires.ftc.teamcode.utils.Spindex;
+
 
 @Autonomous(name = "AutoTest")
 public class AutoTest extends OpMode {
+
+    Spindex spindex = new Spindex(hardwareMap, telemetry);
+    Intake intake = new Intake(hardwareMap, telemetry);
+    Shooter shooter = new Shooter(hardwareMap, telemetry);
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
@@ -19,20 +28,26 @@ public class AutoTest extends OpMode {
 
 
     private final Pose startPose = new Pose(0, 0, 0);
-    private final Pose midPose = new Pose(12, 12, Math.toRadians(90));
-    private final Pose endPose = new Pose(0, 0, Math.toRadians(180));
+    private final Pose aimPose = new Pose(12, 12, Math.toRadians(90));
+    private final Pose intake1Lineup = new Pose(0, 0, Math.toRadians(180));
+    private final Pose intake1Intake = new Pose(0, 0, Math.toRadians(0));
 
 
     private Path move1;
-    private PathChain move2;
+    private PathChain move2, move3;
 
     public void buildPaths(){
-        move1 = new Path(new BezierLine(startPose, midPose));
-        move1.setLinearHeadingInterpolation(startPose.getHeading(), endPose.getHeading());
+        move1 = new Path(new BezierLine(startPose, aimPose));
+        move1.setLinearHeadingInterpolation(startPose.getHeading(), intake1Lineup.getHeading());
 
         move2 = follower.pathBuilder()
-                .addPath(new BezierLine(midPose, endPose))
-                .setLinearHeadingInterpolation(midPose.getHeading(), endPose.getHeading())
+                .addPath(new BezierLine(intake1Lineup, intake1Intake))
+                .setLinearHeadingInterpolation(intake1Lineup.getHeading(), intake1Intake.getHeading())
+                .build();
+
+        move3 = follower.pathBuilder()
+                .addPath(new BezierLine(intake1Intake, aimPose))
+                .setLinearHeadingInterpolation(intake1Lineup.getHeading(), aimPose.getHeading())
                 .build();
     }
 
@@ -53,6 +68,11 @@ public class AutoTest extends OpMode {
                     setPathState(2);
                 }
                 break;
+            case 2:
+                if(!follower.isBusy()){
+                    follower.followPath(move3);
+                    setPathState(3);
+                }
         }
     }
 

@@ -34,20 +34,16 @@ public class Intake {
 
     public void forwardIntake(){
         intakeMotor.setPower(1);
-        telemetry.addData("Whatever", intakeMotor.getPower());
         state = IntakeState.INTAKE_ON;
     }
 
     public void backwardsIntake(){
         intakeMotor.setPower(-1);
-        telemetry.addData("Whatever", intakeMotor.getPower());
-
         state = IntakeState.INTAKE_BACKWARDS;
     }
 
     public void stopIntake(){
         intakeMotor.setPower(0);
-        telemetry.addData("Whatever", intakeMotor.getPower());
         state = IntakeState.INTAKE_OFF;
     }
 

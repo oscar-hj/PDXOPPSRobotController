@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
@@ -30,8 +31,9 @@ public class MainTeleOp_2GP extends LinearOpMode {
         intake.init("intakeMotor");
 
         // Initialize spindex
-        Spindex spindex = new Spindex(hardwareMap, telemetry);
-        spindex.init("spinMotor", "transferServo", "colorSensor", "magneticSwitch");
+        Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
+        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor");
+        ElapsedTime spindexTimer = new ElapsedTime();
 
         // Initialize Shooter
         Shooter shooter = new Shooter(hardwareMap, telemetry);
@@ -47,7 +49,7 @@ public class MainTeleOp_2GP extends LinearOpMode {
                 gp2.readGP();
 
                 // Check driveMode of Drivetrain for auto position or operator driving
-                if(driveTrain.driveMode == DriveTrain.DriveMode.OP_DRIVE){
+                if(true){
                     // Runs driving function on gp1
                     driveTrain.Drive2D();
 
@@ -76,12 +78,14 @@ public class MainTeleOp_2GP extends LinearOpMode {
                         shooter.manualHoodAngle(gp1.RT);
                     }
 
-                    // Spindex functions
-                    if(abs(gp2.LSX) > 0.1){
-                        spindex.manualSpindex(gp2.LSX);
-                    }else{
-                        spindex.manualSpindex(0);
+
+                    if(spindexTimer.time() > 0.2 && gamepad2.dpad_right){
+                        spindex.nextPos();
+                        spindexTimer.reset();
                     }
+                    spindex.intakeSpindex();
+                    spindex.goToPos(spindex.currentPos);
+                    telemetry.addData("Target State", spindex.currentPos);
 
                     if(gp1.DPU){
                         spindex.activateTransfer(true);
