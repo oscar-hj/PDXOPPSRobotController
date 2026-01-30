@@ -36,7 +36,7 @@ public class Shooter {
 
         shooterMotor.setVelocity(-rpm);
     }
-    
+
     public void hoodAngle(double angle){
         double targetAngle = (angle - 3) / 42.0;
 //        hoodAngleServo.setPosition(targetAngle);
@@ -47,6 +47,14 @@ public class Shooter {
     }
 
     public double getRPM(){
-        return shooterMotor.getVelocity();
+        double rpm = shooterMotor.getVelocity();
+        rpm *= 60;
+        rpm /= 28;
+
+        return rpm;
+    }
+
+    public boolean hasShot(){
+        return getRPM() < 4000;
     }
 }

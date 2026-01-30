@@ -77,9 +77,6 @@ public class ClassTest extends LinearOpMode {
                     if(gamepad1.a){
                         spindex.shootSpindex();
                     }
-
-                    // AUTO is on to auto drive the robot to the shooting place
-                    // TODO: Add functionality to auto drive robot to shooting place
                 }
 
 

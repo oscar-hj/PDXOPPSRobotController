@@ -17,20 +17,18 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 @Autonomous(name = "AutoTest")
 public class AutoTest extends OpMode {
-
-    Spindex spindex = new Spindex(hardwareMap, telemetry);
     Intake intake = new Intake(hardwareMap, telemetry);
     Shooter shooter = new Shooter(hardwareMap, telemetry);
+    Spindex spindex = new Spindex(hardwareMap, telemetry, shooter);
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
     private int pathState;
 
 
-    private final Pose startPose = new Pose(0, 0, 0);
-    private final Pose aimPose = new Pose(12, 12, Math.toRadians(90));
-    private final Pose intake1Lineup = new Pose(0, 0, Math.toRadians(180));
-    private final Pose intake1Intake = new Pose(0, 0, Math.toRadians(0));
+    private final Pose startPose = new Pose(0, 0, Math.toRadians(270));
+    private final Pose aimPose = new Pose(24, 24, Math.toRadians(135));
+    private final Pose clearPose = new Pose(0, 0, Math.toRadians(0));
 
 
     private Path move1;
@@ -38,16 +36,11 @@ public class AutoTest extends OpMode {
 
     public void buildPaths(){
         move1 = new Path(new BezierLine(startPose, aimPose));
-        move1.setLinearHeadingInterpolation(startPose.getHeading(), intake1Lineup.getHeading());
+        move1.setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading());
 
         move2 = follower.pathBuilder()
-                .addPath(new BezierLine(intake1Lineup, intake1Intake))
-                .setLinearHeadingInterpolation(intake1Lineup.getHeading(), intake1Intake.getHeading())
-                .build();
-
-        move3 = follower.pathBuilder()
-                .addPath(new BezierLine(intake1Intake, aimPose))
-                .setLinearHeadingInterpolation(intake1Lineup.getHeading(), aimPose.getHeading())
+                .addPath(new BezierLine(aimPose, clearPose))
+                .setLinearHeadingInterpolation(aimPose.getHeading(), clearPose.getHeading())
                 .build();
     }
 
@@ -57,10 +50,15 @@ public class AutoTest extends OpMode {
     }
 
     public void autonomousPathUpdate(){
+        spindex.goToPos(spindex.currentPos);
+
         switch (pathState){
             case 0:
+                shooter.primeShooter(6000);
                 follower.followPath(move1);
-                setPathState(1);
+                if(!follower.isBusy()){
+                    spindex.shootSpindex();
+                }
                 break;
             case 1:
                 if(!follower.isBusy()){
@@ -68,11 +66,6 @@ public class AutoTest extends OpMode {
                     setPathState(2);
                 }
                 break;
-            case 2:
-                if(!follower.isBusy()){
-                    follower.followPath(move3);
-                    setPathState(3);
-                }
         }
     }
 
@@ -98,6 +91,9 @@ public class AutoTest extends OpMode {
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
+
+        spindex.homeSpindex();
+        spindex.currentPos = Spindex.Offset.SHOOT1;
     }
 
     @Override

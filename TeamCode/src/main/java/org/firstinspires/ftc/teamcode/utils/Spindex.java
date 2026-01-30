@@ -20,8 +20,10 @@ public class Spindex {
     TouchSensor magneticSwitch;
     DistanceSensor backSensor, frontSensor;
     ElapsedTime ballTime = new ElapsedTime();
+    Shooter shooter;
 
     public boolean ballStoring = false;
+    public boolean hasShot = false;
     public int homeValue;
     public DriveTrain driveTrain;
     public SpindexState spindexState;
@@ -50,6 +52,11 @@ public class Spindex {
         this.telemetry = tele;
         this.driveTrain = driveTrain;
     }
+    public Spindex(HardwareMap hwMp, Telemetry tele, Shooter shoot){
+        this.hardwareMap = hwMp;
+        this.telemetry = tele;
+        this.shooter = shoot;
+    }
     public Spindex(HardwareMap hwMp, Telemetry tele){
         this.hardwareMap = hwMp;
         this.telemetry = tele;
@@ -69,18 +76,16 @@ public class Spindex {
 
     public void homeSpindex(){
         do{
-            transferServo.setPower(1);
-            spinMotor.setPower(-0.1);
+            spinMotor.setPower(-0.2);
             telemetry.addLine("Homing...");
             telemetry.update();
         }while (magneticSwitch.isPressed());
         do{
-            spinMotor.setPower(-0.1);
+            spinMotor.setPower(-0.2);
             telemetry.addLine("Homing...");
             telemetry.update();
         }while (!magneticSwitch.isPressed());
 
-        transferServo.setPower(0);
         spinMotor.setPower(0);
         telemetry.addLine("Home!");
         homeValue = spinMotor.getCurrentPosition() + 400;
@@ -120,11 +125,6 @@ public class Spindex {
         }
 
         this.currentPos = spinPos;
-
-//        telemetry.addData("Encoder Value", currentPos);
-//        telemetry.addData("Target Pos", targetPos);
-//        telemetry.addData("Pos Difference", currentPos - targetPos);
-//        telemetry.addLine();
     }
 
     public void nextPos(){
@@ -187,6 +187,47 @@ public class Spindex {
 
     public void shootSpindex(){
 
+        // If the spindex is not in position to shoot, don't run the function.
+        if(spindexState != SpindexState.SHOOTING){
+            return;
+        }
+
+        // If RMP drops below 4000 then the shooter has shot
+        if(shooter.getRPM() < 4000){
+            hasShot = true;
+        }
+
+        switch (currentPos){
+            case SHOOT1:
+                if(!hasShot){
+                    activateTransfer(true);
+                }else{
+                    hasShot = false;
+                    currentPos = Offset.SHOOT2;
+                    activateTransfer(false);
+                }
+                break;
+
+            case SHOOT2:
+                if(!hasShot){
+                    activateTransfer(true);
+                }else{
+                    hasShot = false;
+                    currentPos = Offset.SHOOT3;
+                    activateTransfer(false);
+                }
+                break;
+
+            case SHOOT3:
+                if(!hasShot){
+                    activateTransfer(true);
+                }else{
+                    hasShot = false;
+                    currentPos = Offset.STORE1;
+                    activateTransfer(false);
+                }
+                break;
+        }
     }
 
     public void activateTransfer(boolean direction){
