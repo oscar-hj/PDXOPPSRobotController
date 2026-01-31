@@ -11,7 +11,8 @@ public class PIDController {
 
 
     private static final double I_MAX = 0.3;
-    private static final double POS_TOLERANCE = 150;
+    private static final double PID_TOLERANCE = 25;
+    private static final double S_TOLERANCE = 150;
 
     public PIDController(double Ks, double Kp, double Ki, double Kd) {
         this.Ks = Ks;
@@ -23,6 +24,7 @@ public class PIDController {
     public double update(double target, double state, Telemetry telemetry) {
         // Get delta time and reset timer
         double dt = timer.seconds();
+        if (dt <= 0) dt = 1e-3;
         timer.reset();
 
         // Check if target has changed and reset integral sum
@@ -39,26 +41,26 @@ public class PIDController {
 
         // Integral term
         integralSum += error * dt;
-        integralSum = clamp(integralSum, -I_MAX, I_MAX);
         double integral = Ki * integralSum;
+        integral = clamp(integral, -I_MAX, I_MAX);
 
         // Derivative term
         double derivative = (Kd * (error - lastError) / dt);
         lastError = error;
 
         // Calculate total output
-        double output = proportional + integral + derivative;
+        double output = proportional + derivative;
 
         // Add power if not on target
-        if(Math.abs(error) > POS_TOLERANCE){
+        if(Math.abs(error) > S_TOLERANCE){
             output += Ks * Math.signum(error);
         }
 
         // Prevent derivative from making output go negative
-        if (Math.signum(output) != Math.signum(error)
-                && Math.abs(error) > POS_TOLERANCE) {
-            output = 0;
-        }
+//        if (Math.signum(output) != Math.signum(error)
+//                && Math.abs(error) > PID_TOLERANCE) {
+//            output = 0;
+//        }
 
         // Clamp the output
         output = clamp(output, -1, 1);

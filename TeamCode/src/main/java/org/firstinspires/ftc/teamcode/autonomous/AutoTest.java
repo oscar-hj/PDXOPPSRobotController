@@ -17,9 +17,10 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 @Autonomous(name = "AutoTest")
 public class AutoTest extends OpMode {
-    Intake intake = new Intake(hardwareMap, telemetry);
-    Shooter shooter = new Shooter(hardwareMap, telemetry);
-    Spindex spindex = new Spindex(hardwareMap, telemetry, shooter);
+    public Intake intake;
+    public Shooter shooter = new Shooter(hardwareMap, telemetry);
+    public Spindex spindex = new Spindex(hardwareMap, telemetry, shooter);
+
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
@@ -92,7 +93,16 @@ public class AutoTest extends OpMode {
         buildPaths();
         follower.setStartingPose(startPose);
 
+        intake = new Intake(hardwareMap, telemetry);
+        shooter = new Shooter(hardwareMap, telemetry);
+        spindex = new Spindex(hardwareMap, telemetry, shooter);
+
+        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor", true);
+        shooter.init("shooterMotor", "hoodServo");
+
+
         spindex.homeSpindex();
+        spindex.saveHome();
         spindex.currentPos = Spindex.Offset.SHOOT1;
     }
 

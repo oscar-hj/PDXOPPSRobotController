@@ -32,7 +32,7 @@ public class MainTeleOp_2GP extends LinearOpMode {
 
         // Initialize spindex
         Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
-        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor");
+        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor", false);
         ElapsedTime spindexTimer = new ElapsedTime();
 
         // Initialize Shooter
@@ -67,17 +67,14 @@ public class MainTeleOp_2GP extends LinearOpMode {
 
                     // Shooter functions
                     if(gp1.A){
-                        shooter.primeShooter(10000);
+                        shooter.primeShooter(6000);
                     } else if(gp1.B){
                         shooter.primeShooter(0);
+                    } else if(gp1.X){
+                        shooter.primeShooter(4600);
+                    }else if(gp1.Y){
+                        shooter.primeShooter(5000);
                     }
-
-                    if(gp1.LT > 0.1){
-                        shooter.manualHoodAngle(gp1.LT);
-                    } else if(gp1.RT > 0.1){
-                        shooter.manualHoodAngle(gp1.RT);
-                    }
-
 
                     if(spindexTimer.time() > 0.2 && gamepad2.dpad_right){
                         spindex.nextPos();

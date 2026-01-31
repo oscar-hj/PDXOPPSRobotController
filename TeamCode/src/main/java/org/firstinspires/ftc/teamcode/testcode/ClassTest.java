@@ -27,7 +27,7 @@ public class ClassTest extends LinearOpMode {
 
         // initialize the spindex class
         Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
-        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor");
+        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor", true);
 
         // initialize the shooter class
         Shooter shooter = new Shooter(hardwareMap, telemetry);

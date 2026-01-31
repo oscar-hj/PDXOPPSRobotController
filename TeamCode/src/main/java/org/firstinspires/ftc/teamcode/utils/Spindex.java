@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.utils;
 
+import android.os.Environment;
+import android.util.Log;
+
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -11,8 +15,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Locale;
+
 public class Spindex {
-    PIDController pidController = new PIDController(0.3, 2.5e-6, 5e-5, 1e-5);
+    PIDController pidController = new PIDController(0.1, 2.5e-4, 2e-5, 1e-5);
     HardwareMap hardwareMap;
     Telemetry telemetry;
     DcMotorEx spinMotor;
@@ -36,11 +46,11 @@ public class Spindex {
     }
     public enum Offset  {
         STORE1(1200),
-        SHOOT1(3200),
+        SHOOT1(3400),
         STORE2(4100),
-        SHOOT2(6100),
+        SHOOT2(6300),
         STORE3(6800),
-        SHOOT3(8800);
+        SHOOT3(9000);
 
         private final int offset;
         private Offset(final int offset) { this.offset = offset; }
@@ -62,7 +72,7 @@ public class Spindex {
         this.telemetry = tele;
     }
 
-    public void init(String spinMotorName, String transferServoName, String magneticSwitchName, String frontDistanceSensorName, String backDistanceSensorName){
+    public void init(String spinMotorName, String transferServoName, String magneticSwitchName, String frontDistanceSensorName, String backDistanceSensorName, boolean doHome){
         spinMotor = hardwareMap.get(DcMotorEx.class, spinMotorName);
         magneticSwitch = hardwareMap.get(TouchSensor.class, magneticSwitchName);
         transferServo = hardwareMap.get(CRServo.class, transferServoName);
@@ -71,17 +81,22 @@ public class Spindex {
 
         spinMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spinMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        homeSpindex();
+        currentPos = Offset.STORE1;
+        if(doHome){
+            homeSpindex();
+        }else{
+            homeValue = loadHome();
+        }
     }
 
     public void homeSpindex(){
         do{
-            spinMotor.setPower(-0.2);
+            spinMotor.setPower(-0.5);
             telemetry.addLine("Homing...");
             telemetry.update();
         }while (magneticSwitch.isPressed());
         do{
-            spinMotor.setPower(-0.2);
+            spinMotor.setPower(-0.5);
             telemetry.addLine("Homing...");
             telemetry.update();
         }while (!magneticSwitch.isPressed());
@@ -145,7 +160,7 @@ public class Spindex {
                 currentPos = Offset.STORE3;
                 break;
             case SHOOT3:
-                currentPos = Offset.STORE1;
+                currentPos = Offset.STORE3;
                 break;
         }
     }
@@ -173,7 +188,7 @@ public class Spindex {
                             ballStoring = false;
                             break;
                         case STORE3:
-                            currentPos = Offset.SHOOT1;
+                            currentPos = Offset.SHOOT3;
                             ballStoring = false;
                             break;
                     }
@@ -227,6 +242,35 @@ public class Spindex {
                     activateTransfer(false);
                 }
                 break;
+        }
+    }
+
+    public void saveHome(){
+        String path = Environment.getExternalStorageDirectory().getPath() + "/FIRST/home.txt";
+        double home = homeValue;
+
+        String output = String.format(Locale.ENGLISH, "%f", home);
+
+        try{
+            FileWriter writer = new FileWriter(path);
+            writer.write(output);
+            writer.close();
+        } catch (IOException e){
+            Log.e("Spindex Homing", "Failed to save home value", e);
+        }
+    }
+
+    public int loadHome(){
+        String path = Environment.getExternalStorageDirectory().getPath() + "/FIRST/home.txt";
+        try{
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            String line = reader.readLine();
+            reader.close();
+
+            return Integer.parseInt(line);
+        } catch (IOException| NullPointerException | NumberFormatException e){
+            Log.e("Spindex", "Loading home failed, setting default home!!!", e);
+            return 0;
         }
     }
 
