@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -15,8 +14,8 @@ import org.firstinspires.ftc.teamcode.utils.Shooter;
 import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 
-@Autonomous(name = "AutoTest")
-public class AutoTest extends OpMode {
+@Autonomous(name = "Blue_Goal")
+public class Blue_Goal extends OpMode {
     public Intake intake;
     public Shooter shooter = new Shooter(hardwareMap, telemetry);
     public Spindex spindex = new Spindex(hardwareMap, telemetry, shooter);
@@ -27,17 +26,19 @@ public class AutoTest extends OpMode {
     private int pathState;
 
 
-    private final Pose startPose = new Pose(0, 0, Math.toRadians(270));
-    private final Pose aimPose = new Pose(24, 24, Math.toRadians(135));
-    private final Pose clearPose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose startPose = new Pose(22, 125, Math.toRadians(144));
+    private final Pose aimPose = new Pose(40, 95, Math.toRadians(135));
+    private final Pose clearPose = new Pose(50, 120, Math.toRadians(135));
 
 
-    private Path move1;
-    private PathChain move2, move3;
+//    private Path move1;
+    private PathChain move1, move2, move3;
 
     public void buildPaths(){
-        move1 = new Path(new BezierLine(startPose, aimPose));
-        move1.setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading());
+        move1 = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, aimPose))
+                .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
+                .build();
 
         move2 = follower.pathBuilder()
                 .addPath(new BezierLine(aimPose, clearPose))
@@ -51,22 +52,33 @@ public class AutoTest extends OpMode {
     }
 
     public void autonomousPathUpdate(){
-        spindex.goToPos(spindex.currentPos);
+        spindex.goToPos(spindex.currentPos, false);
 
         switch (pathState){
             case 0:
-                shooter.primeShooter(6000);
-                follower.followPath(move1);
-                if(!follower.isBusy()){
-                    spindex.shootSpindex();
-                }
+                shooter.primeShooter(3500);
+                follower.followPath(move1, true);
+                setPathState(1);
                 break;
             case 1:
                 if(!follower.isBusy()){
-                    follower.followPath(move2);
-                    setPathState(2);
+                    spindex.shootSpindex(3500);
+                    if(spindex.currentPos == Spindex.Offset.STORE1){
+                        setPathState(2);
+                    }
                 }
                 break;
+            case 2:
+                shooter.primeShooter(0);
+                if(!follower.isBusy()){
+                    follower.followPath(move2);
+                    setPathState(3);
+                }
+                break;
+            case 3:
+                if(!follower.isBusy()){
+                    setPathState(-1);
+                }
         }
     }
 
@@ -80,7 +92,18 @@ public class AutoTest extends OpMode {
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("Is busy", follower.isBusy());
+        telemetry.addLine();
+        telemetry.addData("RPM", shooter.getRPM());
+        telemetry.addData("At RPM", shooter.isAtRPM(4500));
+        telemetry.addData("At RPM", shooter.getRPM() > 4500);
+        telemetry.addData("Spindex POS", spindex.currentPos);
+        telemetry.addData("Spindex State", spindex.spindexState);
         telemetry.update();
+
+        if (pathState == -1){
+            requestOpModeStop();
+        }
     }
 
     @Override

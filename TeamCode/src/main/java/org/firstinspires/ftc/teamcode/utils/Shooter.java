@@ -1,11 +1,12 @@
 package org.firstinspires.ftc.teamcode.utils;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -37,24 +38,24 @@ public class Shooter {
         shooterMotor.setVelocity(-rpm);
     }
 
-    public void hoodAngle(double angle){
-        double targetAngle = (angle - 3) / 42.0;
-//        hoodAngleServo.setPosition(targetAngle);
-    }
+//    public void hoodAngle(double angle){
+//        double targetAngle = (angle - 3) / 42.0;
+////        hoodAngleServo.setPosition(targetAngle);
+//    }
 
-    public void manualHoodAngle(double power){
-        hoodAngleServo.setPower(power);
-    }
+//    public void manualHoodAngle(double power){
+//        hoodAngleServo.setPower(power);
+//    }
 
     public double getRPM(){
         double rpm = shooterMotor.getVelocity();
         rpm *= 60;
         rpm /= 28;
 
-        return rpm;
+        return abs(rpm);
     }
 
-    public boolean hasShot(){
-        return getRPM() < 4000;
+    public boolean isAtRPM(int targetRPM){
+        return getRPM() > targetRPM;
     }
 }

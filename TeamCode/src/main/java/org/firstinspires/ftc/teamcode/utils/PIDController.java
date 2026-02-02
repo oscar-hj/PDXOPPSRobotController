@@ -1,4 +1,6 @@
 package org.firstinspires.ftc.teamcode.utils;
+import static java.lang.Math.abs;
+
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -10,9 +12,8 @@ public class PIDController {
     private final ElapsedTime timer = new ElapsedTime();
 
 
-    private static final double I_MAX = 0.3;
-    private static final double PID_TOLERANCE = 25;
-    private static final double S_TOLERANCE = 150;
+    private static final double I_MAX = 0.7;
+    private static final double S_TOLERANCE = 75;
 
     public PIDController(double Ks, double Kp, double Ki, double Kd) {
         this.Ks = Ks;
@@ -48,11 +49,15 @@ public class PIDController {
         double derivative = (Kd * (error - lastError) / dt);
         lastError = error;
 
+        if(abs(derivative) > 0.015){
+            integralSum = 0;
+        }
+
         // Calculate total output
-        double output = proportional + derivative;
+        double output = proportional + integral + derivative;
 
         // Add power if not on target
-        if(Math.abs(error) > S_TOLERANCE){
+        if(abs(error) > S_TOLERANCE){
             output += Ks * Math.signum(error);
         }
 

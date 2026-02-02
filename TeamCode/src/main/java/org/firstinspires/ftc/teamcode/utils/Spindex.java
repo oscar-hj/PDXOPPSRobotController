@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.utils;
 import android.os.Environment;
 import android.util.Log;
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -22,7 +21,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 public class Spindex {
-    PIDController pidController = new PIDController(0.1, 2.5e-4, 2e-5, 1e-5);
+    PIDController pidController = new PIDController(0, 2.5e-4, 6e-4, 1e-5);
     HardwareMap hardwareMap;
     Telemetry telemetry;
     DcMotorEx spinMotor;
@@ -34,6 +33,7 @@ public class Spindex {
 
     public boolean ballStoring = false;
     public boolean hasShot = false;
+    public boolean atRPM = false;
     public int homeValue;
     public DriveTrain driveTrain;
     public SpindexState spindexState;
@@ -46,17 +46,23 @@ public class Spindex {
     }
     public enum Offset  {
         STORE1(1200),
-        SHOOT1(3400),
+        SHOOT1(3300),
         STORE2(4100),
-        SHOOT2(6300),
+        SHOOT2(6175),
         STORE3(6800),
-        SHOOT3(9000);
+        SHOOT3(8875);
 
         private final int offset;
-        private Offset(final int offset) { this.offset = offset; }
+        Offset(final int offset) { this.offset = offset; }
         public int getOffset() { return this.offset; }
     }
 
+    public Spindex(HardwareMap hwMp, Telemetry tele, Shooter shoot, DriveTrain drive){
+        this.hardwareMap = hwMp;
+        this.telemetry = tele;
+        this.shooter = shoot;
+        this.driveTrain = drive;
+    }
     public Spindex(HardwareMap hwMp, Telemetry tele, DriveTrain driveTrain){
         this.hardwareMap = hwMp;
         this.telemetry = tele;
@@ -67,10 +73,10 @@ public class Spindex {
         this.telemetry = tele;
         this.shooter = shoot;
     }
-    public Spindex(HardwareMap hwMp, Telemetry tele){
-        this.hardwareMap = hwMp;
-        this.telemetry = tele;
-    }
+//    public Spindex(HardwareMap hwMp, Telemetry tele){
+//        this.hardwareMap = hwMp;
+//        this.telemetry = tele;
+//    }
 
     public void init(String spinMotorName, String transferServoName, String magneticSwitchName, String frontDistanceSensorName, String backDistanceSensorName, boolean doHome){
         spinMotor = hardwareMap.get(DcMotorEx.class, spinMotorName);
@@ -109,7 +115,7 @@ public class Spindex {
         telemetry.update();
     }
 
-    public void goToPos(Offset spinPos){
+    public void goToPos(Offset spinPos, boolean isTeleOp){
         int targetPos = homeValue + spinPos.getOffset();
         int currentPos = spinMotor.getCurrentPosition();
         double pidPower = -pidController.update(targetPos, currentPos, telemetry);
@@ -127,13 +133,13 @@ public class Spindex {
                 case STORE2:
                 case STORE3:
                     spindexState = SpindexState.INTAKING;
-                    driveTrain.driveMode = DriveTrain.DriveMode.OP_DRIVE;
+                    if (isTeleOp) driveTrain.driveMode = DriveTrain.DriveMode.OP_DRIVE;
                     break;
                 case SHOOT1:
                 case SHOOT2:
                 case SHOOT3:
                     spindexState = SpindexState.SHOOTING;
-                    driveTrain.driveMode = DriveTrain.DriveMode.AUTO_POS;
+                    if (isTeleOp) driveTrain.driveMode = DriveTrain.DriveMode.AUTO_POS;
                     break;
             }
             spinMotor.setPower(0);
@@ -188,7 +194,7 @@ public class Spindex {
                             ballStoring = false;
                             break;
                         case STORE3:
-                            currentPos = Offset.SHOOT3;
+                            currentPos = Offset.SHOOT1;
                             ballStoring = false;
                             break;
                     }
@@ -200,15 +206,23 @@ public class Spindex {
         }
     }
 
-    public void shootSpindex(){
-
-        // If the spindex is not in position to shoot, don't run the function.
-        if(spindexState != SpindexState.SHOOTING){
+    public void shootSpindex(int targetRPM){
+        telemetry.addData("Spindex State", spindexState);
+        telemetry.addData("Spindex Pos", currentPos);
+        if (!shooter.isAtRPM(targetRPM) && !atRPM){
             return;
+        }else{
+            atRPM = true;
         }
 
-        // If RMP drops below 4000 then the shooter has shot
-        if(shooter.getRPM() < 4000){
+
+        // If the spindex is not in position to shoot, don't run the function.
+//        if(spindexState != SpindexState.SHOOTING){
+//            return;
+//        }
+
+        // If RMP drops below some RPM then the shooter has shot
+        if(shooter.getRPM() < targetRPM * 0.8){
             hasShot = true;
         }
 
@@ -218,8 +232,10 @@ public class Spindex {
                     activateTransfer(true);
                 }else{
                     hasShot = false;
+                    atRPM = false;
                     currentPos = Offset.SHOOT2;
-                    activateTransfer(false);
+                    spindexState = SpindexState.MOVING;
+                    deactivateTransfer();
                 }
                 break;
 
@@ -228,8 +244,10 @@ public class Spindex {
                     activateTransfer(true);
                 }else{
                     hasShot = false;
+                    atRPM = false;
                     currentPos = Offset.SHOOT3;
-                    activateTransfer(false);
+                    spindexState = SpindexState.MOVING;
+                    deactivateTransfer();
                 }
                 break;
 
@@ -238,8 +256,10 @@ public class Spindex {
                     activateTransfer(true);
                 }else{
                     hasShot = false;
+                    atRPM = false;
+                    spindexState = SpindexState.MOVING;
                     currentPos = Offset.STORE1;
-                    activateTransfer(false);
+                    deactivateTransfer();
                 }
                 break;
         }

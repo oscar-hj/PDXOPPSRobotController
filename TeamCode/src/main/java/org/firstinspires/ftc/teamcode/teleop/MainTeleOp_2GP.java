@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import static java.lang.Math.abs;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -49,52 +47,46 @@ public class MainTeleOp_2GP extends LinearOpMode {
                 gp2.readGP();
 
                 // Check driveMode of Drivetrain for auto position or operator driving
-                if(true){
-                    // Runs driving function on gp1
-                    driveTrain.Drive2D();
+                // Runs driving function on gp1
+                driveTrain.Drive2D();
 
-                    // Runs spindex
-                    // spindex.intakeSpindex(true);
+                // Runs spindex
+                // spindex.intakeSpindex(true);
 
-                    // Manually activate/deactivate intake
-                    if(gp2.A){
-                        intake.forwardIntake();
-                    }else if(gp2.B){
-                        intake.backwardsIntake();
-                    }else {
-                        intake.stopIntake();
-                    }
+                // Manually activate/deactivate intake
+                if(gp2.A){
+                    intake.forwardIntake();
+                }else if(gp2.B){
+                    intake.backwardsIntake();
+                }else {
+                    intake.stopIntake();
+                }
 
-                    // Shooter functions
-                    if(gp1.A){
-                        shooter.primeShooter(6000);
-                    } else if(gp1.B){
-                        shooter.primeShooter(0);
-                    } else if(gp1.X){
-                        shooter.primeShooter(4600);
-                    }else if(gp1.Y){
-                        shooter.primeShooter(5000);
-                    }
+                // Shooter functions
+                if(gp1.A){
+                    shooter.primeShooter(6000);
+                } else if(gp1.B){
+                    shooter.primeShooter(0);
+                } else if(gp1.X){
+                    shooter.primeShooter(4600);
+                }else if(gp1.Y){
+                    shooter.primeShooter(5000);
+                }
 
-                    if(spindexTimer.time() > 0.2 && gamepad2.dpad_right){
-                        spindex.nextPos();
-                        spindexTimer.reset();
-                    }
-                    spindex.intakeSpindex();
-                    spindex.goToPos(spindex.currentPos);
-                    telemetry.addData("Target State", spindex.currentPos);
+                if(spindexTimer.time() > 0.2 && gamepad2.dpad_right){
+                    spindex.nextPos();
+                    spindexTimer.reset();
+                }
+                spindex.intakeSpindex();
+                spindex.goToPos(spindex.currentPos, true);
+                telemetry.addData("Target State", spindex.currentPos);
 
-                    if(gp1.DPU){
-                        spindex.activateTransfer(true);
-                    }else if(gp1.DPD){
-                        spindex.activateTransfer(false);
-                    }else{
-                        spindex.deactivateTransfer();
-                    }
-
+                if(gp1.DPU){
+                    spindex.activateTransfer(true);
+                }else if(gp1.DPD){
+                    spindex.activateTransfer(false);
                 }else{
-                    // AUTO is on to auto drive the robot to the shooting place
-                    // TODO: Add functionality to auto drive robot to shooting place
+                    spindex.deactivateTransfer();
                 }
 
 

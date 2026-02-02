@@ -77,7 +77,9 @@ public class DriveTrain {
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-//        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -107,7 +109,7 @@ public class DriveTrain {
             speed = 1;
         } else {
             // normal speed
-            speed = 0.5;
+            speed = 0.7;
         }
 
         if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valr) > deadzone) {
@@ -123,87 +125,87 @@ public class DriveTrain {
         }
     }
 
-    public void Drive2DField(){
-        double speed;
-        double valx = gamepad.left_stick_x;
-        double valy = gamepad.left_stick_y;
-        double valr = gamepad.right_stick_x;
+//    public void Drive2DField(){
+//        double speed;
+//        double valx = gamepad.left_stick_x;
+//        double valy = gamepad.left_stick_y;
+//        double valr = gamepad.right_stick_x;
+//
+//        if(gamepad.left_bumper){
+//            // slow speed
+//            speed = 0.1;
+//        } else if (gamepad.right_bumper) {
+//            // boost speed
+//            speed = 1;
+//        } else {
+//            // normal speed
+//            speed = 0.5;
+//        }
+//
+//        double theta = atan2(valx, valy);
+//        double r = hypot(valx, valy);
+//
+//        theta = theta - follower.getHeading();
+//
+//        double newValx = r * sin(theta);
+//        double newValy = r * cos(theta);
+//
+//        if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valr) > deadzone) {
+//            frontLeft.setPower((newValy - newValx - valr) * speed);
+//            frontRight.setPower((newValy + newValx + valr) * speed);
+//            backLeft.setPower((newValy + newValx - valr) * speed);
+//            backRight.setPower((newValy - newValx + valr) * speed);
+//        } else{
+//            frontLeft.setPower(0);
+//            frontRight.setPower(0);
+//            backLeft.setPower(0);
+//            backRight.setPower(0);
+//        }
+//    }
 
-        if(gamepad.left_bumper){
-            // slow speed
-            speed = 0.1;
-        } else if (gamepad.right_bumper) {
-            // boost speed
-            speed = 1;
-        } else {
-            // normal speed
-            speed = 0.5;
-        }
-
-        double theta = atan2(valx, valy);
-        double r = hypot(valx, valy);
-
-        theta = theta - follower.getHeading();
-
-        double newValx = r * sin(theta);
-        double newValy = r * cos(theta);
-
-        if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valr) > deadzone) {
-            frontLeft.setPower((newValy - newValx - valr) * speed);
-            frontRight.setPower((newValy + newValx + valr) * speed);
-            backLeft.setPower((newValy + newValx - valr) * speed);
-            backRight.setPower((newValy - newValx + valr) * speed);
-        } else{
-            frontLeft.setPower(0);
-            frontRight.setPower(0);
-            backLeft.setPower(0);
-            backRight.setPower(0);
-        }
-    }
-
-    public void Drive2DFieldFreeLook(){
-        double speed;
-        double valx = gamepad.left_stick_x;
-        double valy = gamepad.left_stick_y;
-        double valrx = gamepad.right_stick_x;
-        double valry = gamepad.right_stick_y;
-
-        if(gamepad.left_bumper){
-            // slow speed
-            speed = 0.1;
-        } else if (gamepad.right_bumper) {
-            // boost speed
-            speed = 1;
-        } else {
-            // normal speed
-            speed = 0.5;
-        }
-
-        double theta = atan2(valx, valy);
-        double r = hypot(valx, valy);
-
-        theta = theta - follower.getHeading();
-
-        double newValx = r * sin(theta);
-        double newValy = r * cos(theta);
-
-        if(valrx > 0.4 || valry > 0.4){
-            double targetTheta = atan2(valrx, valry);
-            double currentTheta = abs(follower.getHeading() % PI);
-        }
-
-        if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valrx) > deadzone) {
-            frontLeft.setPower((newValy - newValx - valrx) * speed);
-            frontRight.setPower((newValy + newValx + valrx) * speed);
-            backLeft.setPower((newValy + newValx - valrx) * speed);
-            backRight.setPower((newValy - newValx + valrx) * speed);
-        } else{
-            frontLeft.setPower(0);
-            frontRight.setPower(0);
-            backLeft.setPower(0);
-            backRight.setPower(0);
-        }
-    }
+//    public void Drive2DFieldFreeLook(){
+//        double speed;
+//        double valx = gamepad.left_stick_x;
+//        double valy = gamepad.left_stick_y;
+//        double valrx = gamepad.right_stick_x;
+//        double valry = gamepad.right_stick_y;
+//
+//        if(gamepad.left_bumper){
+//            // slow speed
+//            speed = 0.1;
+//        } else if (gamepad.right_bumper) {
+//            // boost speed
+//            speed = 1;
+//        } else {
+//            // normal speed
+//            speed = 0.5;
+//        }
+//
+//        double theta = atan2(valx, valy);
+//        double r = hypot(valx, valy);
+//
+//        theta = theta - follower.getHeading();
+//
+//        double newValx = r * sin(theta);
+//        double newValy = r * cos(theta);
+//
+//        if(valrx > 0.4 || valry > 0.4){
+//            double targetTheta = atan2(valrx, valry);
+//            double currentTheta = abs(follower.getHeading() % PI);
+//        }
+//
+//        if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valrx) > deadzone) {
+//            frontLeft.setPower((newValy - newValx - valrx) * speed);
+//            frontRight.setPower((newValy + newValx + valrx) * speed);
+//            backLeft.setPower((newValy + newValx - valrx) * speed);
+//            backRight.setPower((newValy - newValx + valrx) * speed);
+//        } else{
+//            frontLeft.setPower(0);
+//            frontRight.setPower(0);
+//            backLeft.setPower(0);
+//            backRight.setPower(0);
+//        }
+//    }
 
 
     public void updatePose(){
@@ -247,22 +249,22 @@ public class DriveTrain {
         }
     }
 
-    public void resetPose(){
-        String path = Environment.getExternalStorageDirectory().getPath() + "/FIRST/pose.txt";
-        double x = 0;
-        double y = 0;
-        double h = 0;
-
-        String output = String.format(Locale.ENGLISH, "%f,%f,%f", x, y, h);
-
-        try{
-            FileWriter writer = new FileWriter(path);
-            writer.write(output);
-            writer.close();
-        } catch (IOException e){
-            Log.e("DriveTrain", "Failed to save Pose", e);
-        }
-    }
+//    public void resetPose(){
+//        String path = Environment.getExternalStorageDirectory().getPath() + "/FIRST/pose.txt";
+//        double x = 0;
+//        double y = 0;
+//        double h = 0;
+//
+//        String output = String.format(Locale.ENGLISH, "%f,%f,%f", x, y, h);
+//
+//        try{
+//            FileWriter writer = new FileWriter(path);
+//            writer.write(output);
+//            writer.close();
+//        } catch (IOException e){
+//            Log.e("DriveTrain", "Failed to save Pose", e);
+//        }
+//    }
 
 
     public void printMotorTelemetry(Telemetry telemetry){
