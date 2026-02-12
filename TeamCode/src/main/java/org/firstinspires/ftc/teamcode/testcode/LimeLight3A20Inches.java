@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.testcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +11,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+@Disabled
 @TeleOp(name = "Limelight AprilTag Distance", group = "Test")
 public class LimeLight3A20Inches extends LinearOpMode {
 

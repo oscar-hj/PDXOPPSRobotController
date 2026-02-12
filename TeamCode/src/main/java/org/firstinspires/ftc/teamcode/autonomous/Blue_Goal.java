@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.utils.Constants;
+import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.Intake;
 import org.firstinspires.ftc.teamcode.utils.Shooter;
 import org.firstinspires.ftc.teamcode.utils.Spindex;
@@ -16,12 +17,13 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 @Autonomous(name = "Blue_Goal")
 public class Blue_Goal extends OpMode {
+    private Follower follower;
     public Intake intake;
     public Shooter shooter = new Shooter(hardwareMap, telemetry);
     public Spindex spindex = new Spindex(hardwareMap, telemetry, shooter);
+    public DriveTrain driveTrain = new DriveTrain(hardwareMap, telemetry, follower);
 
 
-    private Follower follower;
     private Timer pathTimer, opmodeTimer;
     private int pathState;
 
@@ -32,7 +34,7 @@ public class Blue_Goal extends OpMode {
 
 
 //    private Path move1;
-    private PathChain move1, move2, move3;
+    private PathChain move1, move2;
 
     public void buildPaths(){
         move1 = follower.pathBuilder()
@@ -52,7 +54,7 @@ public class Blue_Goal extends OpMode {
     }
 
     public void autonomousPathUpdate(){
-        spindex.goToPos(spindex.currentPos, false);
+        spindex.goToPos(spindex.targetPos, false);
 
         switch (pathState){
             case 0:
@@ -63,7 +65,7 @@ public class Blue_Goal extends OpMode {
             case 1:
                 if(!follower.isBusy()){
                     spindex.shootSpindex(3500);
-                    if(spindex.currentPos == Spindex.Offset.STORE1){
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
                         setPathState(2);
                     }
                 }
@@ -97,7 +99,7 @@ public class Blue_Goal extends OpMode {
         telemetry.addData("RPM", shooter.getRPM());
         telemetry.addData("At RPM", shooter.isAtRPM(4500));
         telemetry.addData("At RPM", shooter.getRPM() > 4500);
-        telemetry.addData("Spindex POS", spindex.currentPos);
+        telemetry.addData("Spindex POS", spindex.targetPos);
         telemetry.addData("Spindex State", spindex.spindexState);
         telemetry.update();
 
@@ -112,7 +114,7 @@ public class Blue_Goal extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -126,7 +128,7 @@ public class Blue_Goal extends OpMode {
 
         spindex.homeSpindex();
         spindex.saveHome();
-        spindex.currentPos = Spindex.Offset.SHOOT1;
+        spindex.targetPos = Spindex.Offset.SHOOT1;
     }
 
     @Override
@@ -140,6 +142,11 @@ public class Blue_Goal extends OpMode {
     public void start(){
         opmodeTimer.resetTimer();
         setPathState(0);
+    }
+
+    @Override
+    public void stop(){
+        driveTrain.savePose();
     }
 }
 

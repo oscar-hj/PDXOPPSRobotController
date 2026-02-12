@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.testcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.dfrobot.HuskyLens.Block;
 
+@Disabled
 @TeleOp(name = "Servo Control with HuskyLens (Corrected Directions)", group = "PDX OPPS")
 public class HalloweenCandy2 extends LinearOpMode {
 

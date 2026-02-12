@@ -30,9 +30,7 @@ public class Red_Goal extends OpMode {
     private final Pose aimPose = new Pose(104, 95, Math.toRadians(45));
     private final Pose clearPose = new Pose(94, 120, Math.toRadians(45));
 
-
-//    private Path move1;
-    private PathChain move1, move2, move3;
+    private PathChain move1, move2;
 
     public void buildPaths(){
         move1 = follower.pathBuilder()
@@ -52,7 +50,7 @@ public class Red_Goal extends OpMode {
     }
 
     public void autonomousPathUpdate(){
-        spindex.goToPos(spindex.currentPos, false);
+        spindex.goToPos(spindex.targetPos, false);
 
         switch (pathState){
             case 0:
@@ -63,7 +61,7 @@ public class Red_Goal extends OpMode {
             case 1:
                 if(!follower.isBusy()){
                     spindex.shootSpindex(3400);
-                    if(spindex.currentPos == Spindex.Offset.STORE1){
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
                         setPathState(2);
                     }
                 }
@@ -97,7 +95,7 @@ public class Red_Goal extends OpMode {
         telemetry.addData("RPM", shooter.getRPM());
         telemetry.addData("At RPM", shooter.isAtRPM(4500));
         telemetry.addData("At RPM", shooter.getRPM() > 4500);
-        telemetry.addData("Spindex POS", spindex.currentPos);
+        telemetry.addData("Spindex POS", spindex.targetPos);
         telemetry.addData("Spindex State", spindex.spindexState);
         telemetry.update();
 
@@ -112,7 +110,7 @@ public class Red_Goal extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -126,7 +124,7 @@ public class Red_Goal extends OpMode {
 
         spindex.homeSpindex();
         spindex.saveHome();
-        spindex.currentPos = Spindex.Offset.SHOOT1;
+        spindex.targetPos = Spindex.Offset.SHOOT1;
     }
 
     @Override

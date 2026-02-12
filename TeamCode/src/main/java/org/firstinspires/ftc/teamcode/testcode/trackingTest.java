@@ -3,12 +3,14 @@ package org.firstinspires.ftc.teamcode.testcode;
 import static java.lang.Math.abs;
 
 import com.qualcomm.hardware.dfrobot.HuskyLens;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import java.lang.reflect.Array;
 
+@Disabled
 @TeleOp(name = "Tracking Test", group = "test")
 public class trackingTest extends LinearOpMode {
     HuskyLens huskyLens;

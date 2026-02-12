@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.utils.Shooter;
 import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 
-@Autonomous(name = "Blue_Far")
+@Autonomous(name = "Red_Far")
 public class Red_Far extends OpMode {
     public Intake intake;
     public Shooter shooter = new Shooter(hardwareMap, telemetry);
@@ -32,13 +32,13 @@ public class Red_Far extends OpMode {
 
 
 //    private Path move1;
-    private PathChain move1, move2, move3;
+    private PathChain /*move1,*/ move2, move3;
 
     public void buildPaths(){
-        move1 = follower.pathBuilder()
-                .addPath(new BezierLine(startPose, aimPose))
-                .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
-                .build();
+//        move1 = follower.pathBuilder()
+//                .addPath(new BezierLine(startPose, aimPose))
+//                .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
+//                .build();
 
         move2 = follower.pathBuilder()
                 .addPath(new BezierLine(aimPose, clearPose))
@@ -57,7 +57,7 @@ public class Red_Far extends OpMode {
     }
 
     public void autonomousPathUpdate(){
-        spindex.goToPos(spindex.currentPos, false);
+        spindex.goToPos(spindex.targetPos, false);
 
         switch (pathState){
             case 0:
@@ -68,7 +68,7 @@ public class Red_Far extends OpMode {
             case 1:
                 if(!follower.isBusy()){
                     spindex.shootSpindex(5100);
-                    if(spindex.currentPos == Spindex.Offset.STORE1){
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
                         setPathState(2);
                     }
                 }
@@ -102,7 +102,7 @@ public class Red_Far extends OpMode {
         telemetry.addData("RPM", shooter.getRPM());
         telemetry.addData("At RPM", shooter.isAtRPM(4500));
         telemetry.addData("At RPM", shooter.getRPM() > 4500);
-        telemetry.addData("Spindex POS", spindex.currentPos);
+        telemetry.addData("Spindex POS", spindex.targetPos);
         telemetry.addData("Spindex State", spindex.spindexState);
         telemetry.update();
 
@@ -117,7 +117,7 @@ public class Red_Far extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -131,7 +131,7 @@ public class Red_Far extends OpMode {
 
         spindex.homeSpindex();
         spindex.saveHome();
-        spindex.currentPos = Spindex.Offset.SHOOT1;
+        spindex.targetPos = Spindex.Offset.SHOOT1;
     }
 
     @Override

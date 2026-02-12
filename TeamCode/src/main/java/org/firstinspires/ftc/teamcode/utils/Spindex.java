@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 public class Spindex {
+    // Initialize sPID controller with sPID values
     PIDController pidController = new PIDController(0, 2.5e-4, 6e-4, 1e-5);
     HardwareMap hardwareMap;
     Telemetry telemetry;
@@ -37,13 +38,15 @@ public class Spindex {
     public int homeValue;
     public DriveTrain driveTrain;
     public SpindexState spindexState;
-    public Offset currentPos;
+    public Offset targetPos;
 
     public enum SpindexState {
         INTAKING,
         SHOOTING,
         MOVING
     }
+
+    // Encoder offsets for spindex positions
     public enum Offset  {
         STORE1(1200),
         SHOOT1(3300),
@@ -73,11 +76,8 @@ public class Spindex {
         this.telemetry = tele;
         this.shooter = shoot;
     }
-//    public Spindex(HardwareMap hwMp, Telemetry tele){
-//        this.hardwareMap = hwMp;
-//        this.telemetry = tele;
-//    }
 
+    // Initialize spindex
     public void init(String spinMotorName, String transferServoName, String magneticSwitchName, String frontDistanceSensorName, String backDistanceSensorName, boolean doHome){
         spinMotor = hardwareMap.get(DcMotorEx.class, spinMotorName);
         magneticSwitch = hardwareMap.get(TouchSensor.class, magneticSwitchName);
@@ -87,7 +87,11 @@ public class Spindex {
 
         spinMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spinMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        currentPos = Offset.STORE1;
+
+        // Sets the target position to STORE1
+        targetPos = Offset.STORE1;
+
+        // Homes spindex, or load spindex value
         if(doHome){
             homeSpindex();
         }else{
@@ -95,6 +99,7 @@ public class Spindex {
         }
     }
 
+    // Homes spindex to get a relative encoder "home" value
     public void homeSpindex(){
         do{
             spinMotor.setPower(-0.5);
@@ -110,24 +115,31 @@ public class Spindex {
         spinMotor.setPower(0);
         telemetry.addLine("Home!");
         homeValue = spinMotor.getCurrentPosition() + 400;
-        currentPos = Offset.STORE1;
+        targetPos = Offset.STORE1;
 
         telemetry.update();
     }
 
+    /**
+        Runs the spindex using sPID controller
+        @param isTeleOp false on auto or it breaks, true if teleOp
+     **/
     public void goToPos(Offset spinPos, boolean isTeleOp){
+        // Gets the target pos and current pos
         int targetPos = homeValue + spinPos.getOffset();
         int currentPos = spinMotor.getCurrentPosition();
+
+        // Passes target and current pos to get power value from sPID controller
         double pidPower = -pidController.update(targetPos, currentPos, telemetry);
         int tolerance = 50;  // in ticks
-
         telemetry.addData("PIDPower", pidPower);
 
-
+        // If the spindex is inside the tolerance, stop moving
         if (!(currentPos < targetPos + tolerance && currentPos > targetPos - tolerance)){
             spindexState = SpindexState.MOVING;
             spinMotor.setPower(pidPower);
         }else{
+            spinMotor.setPower(pidPower);
             switch (spinPos){
                 case STORE1:
                 case STORE2:
@@ -142,31 +154,31 @@ public class Spindex {
                     if (isTeleOp) driveTrain.driveMode = DriveTrain.DriveMode.AUTO_POS;
                     break;
             }
-            spinMotor.setPower(0);
         }
 
-        this.currentPos = spinPos;
+        this.targetPos = spinPos;
     }
 
+    // Switches to nex pos when called
     public void nextPos(){
-        switch (currentPos){
+        switch (targetPos){
             case STORE1:
-                currentPos = Offset.SHOOT1;
+                targetPos = Offset.SHOOT1;
                 break;
             case STORE2:
-                currentPos = Offset.SHOOT2;
+                targetPos = Offset.SHOOT2;
                 break;
             case STORE3:
-                currentPos = Offset.SHOOT3;
+                targetPos = Offset.SHOOT3;
                 break;
             case SHOOT1:
-                currentPos = Offset.STORE2;
+                targetPos = Offset.STORE2;
                 break;
             case SHOOT2:
-                currentPos = Offset.STORE3;
+                targetPos = Offset.STORE3;
                 break;
             case SHOOT3:
-                currentPos = Offset.STORE3;
+                targetPos = Offset.STORE3;
                 break;
         }
     }
@@ -184,17 +196,17 @@ public class Spindex {
         if ((frontSensor.getDistance(DistanceUnit.INCH) < 2 || backSensor.getDistance(DistanceUnit.INCH) < 2) && !(spindexState == SpindexState.MOVING)){
             if(ballStoring){
                 if(ballTime.time() > 0.5) {
-                    switch (currentPos) {
+                    switch (targetPos) {
                         case STORE1:
-                            currentPos = Offset.STORE2;
+                            targetPos = Offset.STORE2;
                             ballStoring = false;
                             break;
                         case STORE2:
-                            currentPos = Offset.STORE3;
+                            targetPos = Offset.STORE3;
                             ballStoring = false;
                             break;
                         case STORE3:
-                            currentPos = Offset.SHOOT1;
+                            targetPos = Offset.SHOOT1;
                             ballStoring = false;
                             break;
                     }
@@ -208,7 +220,7 @@ public class Spindex {
 
     public void shootSpindex(int targetRPM){
         telemetry.addData("Spindex State", spindexState);
-        telemetry.addData("Spindex Pos", currentPos);
+        telemetry.addData("Spindex Pos", targetPos);
         if (!shooter.isAtRPM(targetRPM) && !atRPM){
             return;
         }else{
@@ -226,14 +238,14 @@ public class Spindex {
             hasShot = true;
         }
 
-        switch (currentPos){
+        switch (targetPos){
             case SHOOT1:
                 if(!hasShot){
                     activateTransfer(true);
                 }else{
                     hasShot = false;
                     atRPM = false;
-                    currentPos = Offset.SHOOT2;
+                    targetPos = Offset.SHOOT2;
                     spindexState = SpindexState.MOVING;
                     deactivateTransfer();
                 }
@@ -245,7 +257,7 @@ public class Spindex {
                 }else{
                     hasShot = false;
                     atRPM = false;
-                    currentPos = Offset.SHOOT3;
+                    targetPos = Offset.SHOOT3;
                     spindexState = SpindexState.MOVING;
                     deactivateTransfer();
                 }
@@ -258,7 +270,7 @@ public class Spindex {
                     hasShot = false;
                     atRPM = false;
                     spindexState = SpindexState.MOVING;
-                    currentPos = Offset.STORE1;
+                    targetPos = Offset.STORE1;
                     deactivateTransfer();
                 }
                 break;

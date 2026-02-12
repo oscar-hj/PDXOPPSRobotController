@@ -25,6 +25,7 @@ public class Intake {
         this.telemetry = tel;
     }
 
+    // Initialize intake
     public void init(String motorName){
         intakeMotor = hardwareMap.get(DcMotor.class, motorName);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

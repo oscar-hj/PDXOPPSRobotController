@@ -46,6 +46,9 @@ public class MainTeleOp_2GP extends LinearOpMode {
                 gp1.readGP();
                 gp2.readGP();
 
+                // Updates pose for the follower
+                driveTrain.updatePose();
+
                 // Check driveMode of Drivetrain for auto position or operator driving
                 // Runs driving function on gp1
                 driveTrain.Drive2D();
@@ -78,8 +81,8 @@ public class MainTeleOp_2GP extends LinearOpMode {
                     spindexTimer.reset();
                 }
                 spindex.intakeSpindex();
-                spindex.goToPos(spindex.currentPos, true);
-                telemetry.addData("Target State", spindex.currentPos);
+                spindex.goToPos(spindex.targetPos, true);
+                telemetry.addData("Target State", spindex.targetPos);
 
                 if(gp1.DPU){
                     spindex.activateTransfer(true);

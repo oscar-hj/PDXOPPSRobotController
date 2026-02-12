@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "Class Test")
 public class ClassTest extends LinearOpMode {
@@ -18,8 +17,7 @@ public class ClassTest extends LinearOpMode {
     int spindexSpeed = 0;
     @Override
     public void runOpMode(){
-        // Makes a DriveTrain object taking the hardwareMap and gamepad1, loads the pose, and
-        // initializes motors and PedroPathing follower (for tracking pose).
+        // Makes a DriveTrain object, loads the pose, and PedroPathing follower (for tracking pose).
         DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
         driveTrain.init("fl", "fr", "bl", "br");
 
@@ -33,13 +31,14 @@ public class ClassTest extends LinearOpMode {
 
         // initialize the spindex class
         Spindex spindex = new Spindex(hardwareMap, telemetry, shooter, driveTrain);
-        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor", true);
+        spindex.init("spinMotor", "transferServo",
+                "magneticSwitch", "frontDistanceSensor",
+                "backDistanceSensor", true);
 
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
         GP gp2 = new GP(gamepad2);
 
-//        ElapsedTime spindexTimer = new ElapsedTime();
 
         waitForStart();
         if(opModeIsActive()){
@@ -48,14 +47,17 @@ public class ClassTest extends LinearOpMode {
                 gp1.readGP();
                 gp2.readGP();
 
+                // Updates pose for the follower
+                driveTrain.updatePose();
+
                 // Check driveMode of Drivetrain for auto position or operator driving
                 if(driveTrain.driveMode == DriveTrain.DriveMode.OP_DRIVE){
+                    // Sets shooting false for next shooting run and deactivates shooter
                     shootingActive = false;
+                    shooter.primeShooter(0);
+
                     // Runs driving function on gp1
                     driveTrain.Drive2D();
-
-                    // Turn off shooter
-                    shooter.primeShooter(0);
 
                     // Manually activate/deactivate intake
                     if(gp1.RT > 0.05){
@@ -66,21 +68,29 @@ public class ClassTest extends LinearOpMode {
                         intake.stopIntake();
                     }
 
-                    // Spindex functions
+                    // Runs spindex functions
                     spindex.intakeSpindex();
-                    spindex.goToPos(spindex.currentPos, true);
+                    spindex.goToPos(spindex.targetPos, true);
                     telemetry.addData("Spindex State", spindex.spindexState);
 
+
+                // Activates when spindex detects when 3 balls are in the spindex
+                // TODO: Make override
                 }else if(driveTrain.driveMode == DriveTrain.DriveMode.AUTO_POS){
                     // Runs driving function on gp1
+                    driveTrain.Drive2D();
+
+                    // Tells drivers we are in shooting mode
                     telemetry.addLine();
                     telemetry.addLine();
                     telemetry.addLine("SHOOTING");
                     telemetry.addLine();
                     telemetry.addLine();
 
-                    driveTrain.Drive2D();
-                    spindex.goToPos(spindex.currentPos, true);
+                    // Run spindex
+                    spindex.goToPos(spindex.targetPos, true);
+
+                    // D-Pad up is far shooting, D-Pad down in close shooting, PS to turn off
                     if(gamepad1.dpad_up){
                         spindexSpeed = 4800;
                         shootingActive = true;
@@ -94,6 +104,7 @@ public class ClassTest extends LinearOpMode {
                         shootingActive = false;
                     }
 
+                    // Runs shooter and spindex with ability to override spindex PID
                     if(shootingActive && abs(gp2.LSX) < 0.1){
                         shooter.primeShooter(spindexSpeed);
                         spindex.shootSpindex(spindexSpeed);
@@ -103,7 +114,7 @@ public class ClassTest extends LinearOpMode {
                     }
                 }
 
-
+                // Update telemetry
                 telemetry.update();
             }
 

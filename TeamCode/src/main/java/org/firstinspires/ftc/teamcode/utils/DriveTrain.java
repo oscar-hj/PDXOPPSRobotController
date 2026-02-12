@@ -1,11 +1,6 @@
 package org.firstinspires.ftc.teamcode.utils;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.atan2;
-import static java.lang.Math.cos;
-import static java.lang.Math.hypot;
-import static java.lang.Math.sin;
 
 import android.os.Environment;
 import android.util.Log;
@@ -41,7 +36,7 @@ public class DriveTrain {
     public static double deadzone = 0.05;
 
     /**
-     * Initialize the Method inside the runOpMode method
+     * Initialize the Method inside the runOpMode method for teleOp
      *
      * @param hwMap   Takes the hardwareMap of the robot
      * @param gp1     Takes the gamepad that is used to drive the robot (gamepad1)
@@ -54,7 +49,19 @@ public class DriveTrain {
     }
 
     /**
-     * Initializes the motors
+     * Initialize the Method inside the runOpMode method for AUTO
+     *
+     * @param hwMap   Takes the hardwareMap of the robot
+     * @param tel     Takes the telemetry for the opMode
+     */
+    public DriveTrain(HardwareMap hwMap, Telemetry tel, Follower follower) {
+        this.hardwareMap = hwMap;
+        this.telemetry = tel;
+        this.follower = follower;
+    }
+
+    /**
+     * Initializes the motors and
      *
      * @param FLM_NAME Name for Front Left Motor
      * @param FRM_NAME Name for Front Right Motor
@@ -62,7 +69,7 @@ public class DriveTrain {
      * @param BRM_NAME Name for Back Right Motor
      */
     public void init(String FLM_NAME, String FRM_NAME, String BLM_NAME, String BRM_NAME){
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap, FLM_NAME, FRM_NAME, BLM_NAME, BRM_NAME);
         follower.setStartingPose(loadPose());
         follower.update();
 
@@ -267,10 +274,10 @@ public class DriveTrain {
 //    }
 
 
-    public void printMotorTelemetry(Telemetry telemetry){
-        telemetry.addData("Front Left", frontLeft.getPower());
-        telemetry.addData("Front Right", frontRight.getPower());
-        telemetry.addData("Back Left", backLeft.getPower());
-        telemetry.addData("Back Right", backRight.getPower());
-    }
+//    public void printMotorTelemetry(Telemetry telemetry){
+//        telemetry.addData("Front Left", frontLeft.getPower());
+//        telemetry.addData("Front Right", frontRight.getPower());
+//        telemetry.addData("Back Left", backLeft.getPower());
+//        telemetry.addData("Back Right", backRight.getPower());
+//    }
 }

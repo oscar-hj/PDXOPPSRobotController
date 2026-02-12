@@ -12,9 +12,10 @@ public class PIDController {
     private final ElapsedTime timer = new ElapsedTime();
 
 
-    private static final double I_MAX = 0.7;
-    private static final double S_TOLERANCE = 75;
+    private static final double I_MAX = 0.7; // Max value for integral
+    private static final double S_TOLERANCE = 75; // Tolerance to turn off static power in ticks
 
+    // Sets sPID values when initializing
     public PIDController(double Ks, double Kp, double Ki, double Kd) {
         this.Ks = Ks;
         this.Kp = Kp;
@@ -22,8 +23,9 @@ public class PIDController {
         this.Kd = Kd;
     }
 
-    public double update(double target, double state, Telemetry telemetry) {
-        // Get delta time and reset timer
+    // Gets the target position and the current position and returns output of sPID
+    public double update(double target, double currentPos, Telemetry telemetry) {
+        // Get delta time and reset timer, sets to 1ms if delta time is less
         double dt = timer.seconds();
         if (dt <= 0) dt = 1e-3;
         timer.reset();
@@ -34,13 +36,14 @@ public class PIDController {
             lastError = 0;
             currentTarget = target;
         }
+
         // Calculate the error
-        double error = target - state;
+        double error = target - currentPos;
 
         // Proportional term
         double proportional = Kp * error;
 
-        // Integral term
+        // Integral term, clamping the output to the limit
         integralSum += error * dt;
         double integral = Ki * integralSum;
         integral = clamp(integral, -I_MAX, I_MAX);
@@ -49,6 +52,7 @@ public class PIDController {
         double derivative = (Kd * (error - lastError) / dt);
         lastError = error;
 
+        // If the motor moves too fast, reset the integral
         if(abs(derivative) > 0.015){
             integralSum = 0;
         }
@@ -56,16 +60,10 @@ public class PIDController {
         // Calculate total output
         double output = proportional + integral + derivative;
 
-        // Add power if not on target
+        // Add power if out of tolerance
         if(abs(error) > S_TOLERANCE){
             output += Ks * Math.signum(error);
         }
-
-        // Prevent derivative from making output go negative
-//        if (Math.signum(output) != Math.signum(error)
-//                && Math.abs(error) > PID_TOLERANCE) {
-//            output = 0;
-//        }
 
         // Clamp the output
         output = clamp(output, -1, 1);

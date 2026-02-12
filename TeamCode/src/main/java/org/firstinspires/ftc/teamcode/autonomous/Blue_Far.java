@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.utils.Constants;
+import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.Intake;
 import org.firstinspires.ftc.teamcode.utils.Shooter;
 import org.firstinspires.ftc.teamcode.utils.Spindex;
@@ -16,29 +17,29 @@ import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 @Autonomous(name = "Blue_Far")
 public class Blue_Far extends OpMode {
-    public Intake intake;
+    // Create variables
+    private Follower follower;
+    public Intake intake = new Intake(hardwareMap, telemetry);
     public Shooter shooter = new Shooter(hardwareMap, telemetry);
     public Spindex spindex = new Spindex(hardwareMap, telemetry, shooter);
+    public DriveTrain driveTrain = new DriveTrain(hardwareMap, telemetry, follower);
 
-
-    private Follower follower;
     private Timer pathTimer, opmodeTimer;
     private int pathState;
 
 
+    // Create poses and path chain variables
     private final Pose startPose = new Pose(55.5, 7.5, Math.toRadians(90));
     private final Pose aimPose = new Pose(55.5, 12, Math.toRadians(115));
     private final Pose clearPose = new Pose(43.5, 20, Math.toRadians(180));
+    private PathChain /*move1,*/ move2, move3;
 
-
-//    private Path move1;
-    private PathChain move1, move2, move3;
-
+    // Builds the paths
     public void buildPaths(){
-        move1 = follower.pathBuilder()
-                .addPath(new BezierLine(startPose, aimPose))
-                .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
-                .build();
+        // move1 = follower.pathBuilder()
+        //         .addPath(new BezierLine(startPose, aimPose))
+        //         .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
+        //         .build();
 
         move2 = follower.pathBuilder()
                 .addPath(new BezierLine(aimPose, clearPose))
@@ -51,13 +52,15 @@ public class Blue_Far extends OpMode {
                 .build();
     }
 
+    // Function to set the path state
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
     }
 
+    // Autonomous routine loop
     public void autonomousPathUpdate(){
-        spindex.goToPos(spindex.currentPos, false);
+        spindex.goToPos(spindex.targetPos, false);
 
         switch (pathState){
             case 0:
@@ -68,7 +71,7 @@ public class Blue_Far extends OpMode {
             case 1:
                 if(!follower.isBusy()){
                     spindex.shootSpindex(5100);
-                    if(spindex.currentPos == Spindex.Offset.STORE1){
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
                         setPathState(2);
                     }
                 }
@@ -102,7 +105,7 @@ public class Blue_Far extends OpMode {
         telemetry.addData("RPM", shooter.getRPM());
         telemetry.addData("At RPM", shooter.isAtRPM(4500));
         telemetry.addData("At RPM", shooter.getRPM() > 4500);
-        telemetry.addData("Spindex POS", spindex.currentPos);
+        telemetry.addData("Spindex POS", spindex.targetPos);
         telemetry.addData("Spindex State", spindex.spindexState);
         telemetry.update();
 
@@ -117,7 +120,7 @@ public class Blue_Far extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -131,7 +134,7 @@ public class Blue_Far extends OpMode {
 
         spindex.homeSpindex();
         spindex.saveHome();
-        spindex.currentPos = Spindex.Offset.SHOOT1;
+        spindex.targetPos = Spindex.Offset.SHOOT1;
     }
 
     @Override
@@ -145,6 +148,11 @@ public class Blue_Far extends OpMode {
     public void start(){
         opmodeTimer.resetTimer();
         setPathState(0);
+    }
+
+    @Override
+    public void stop(){
+        driveTrain.savePose();
     }
 }
 

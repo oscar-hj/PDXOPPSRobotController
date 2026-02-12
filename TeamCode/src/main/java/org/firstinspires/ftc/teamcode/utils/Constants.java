@@ -47,10 +47,14 @@ public class Constants{
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
-    public static Follower createFollower(HardwareMap hardwareMap){
+    public static Follower createFollower(HardwareMap hardwareMap, String frontLeftMotor, String frontRightMotor, String backLeftMotor, String backRightMotor){
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
-                .mecanumDrivetrain(driveConstants)
+                .mecanumDrivetrain(driveConstants
+                        .leftFrontMotorName(frontLeftMotor)
+                        .rightFrontMotorName(frontRightMotor)
+                        .leftRearMotorName(backLeftMotor)
+                        .rightRearMotorName(backRightMotor))
                 .pinpointLocalizer(localizerConstants)
                 .build();
     }
