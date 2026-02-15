@@ -31,9 +31,8 @@ public class ClassTest extends LinearOpMode {
 
         // initialize the spindex class
         Spindex spindex = new Spindex(hardwareMap, telemetry, shooter, driveTrain);
-        spindex.init("spinMotor", "transferServo",
-                "magneticSwitch", "frontDistanceSensor",
-                "backDistanceSensor", true);
+        spindex.init("spinMotor", "kickServo", "magneticSwitch", "distanceSensor", "transferMotor", true);
+
 
         // makes 2 gamepad objects for gp1 and gp2
         GP gp1 = new GP(gamepad1);
@@ -69,6 +68,7 @@ public class ClassTest extends LinearOpMode {
                     }
 
                     // Runs spindex functions
+                    spindex.updateKicker();
                     spindex.intakeSpindex();
                     spindex.goToPos(spindex.targetPos, true);
                     telemetry.addData("Spindex State", spindex.spindexState);
@@ -89,6 +89,7 @@ public class ClassTest extends LinearOpMode {
 
                     // Run spindex
                     spindex.goToPos(spindex.targetPos, true);
+                    spindex.updateKicker();
 
                     // D-Pad up is far shooting, D-Pad down in close shooting, PS to turn off
                     if(gamepad1.dpad_up){

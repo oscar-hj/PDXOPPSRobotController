@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
 import org.firstinspires.ftc.teamcode.utils.Shooter;
+import org.firstinspires.ftc.teamcode.utils.Spindex;
 
 
 @Configurable
@@ -28,6 +29,9 @@ public class ShootingDistanceTest extends LinearOpMode {
         // Initialize drive train
         DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
         driveTrain.init("fl", "fr", "bl", "br");
+
+        Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
+        spindex.init("spinMotor", "kickServo", "magneticSwitch", "distanceSensor", "transferMotor", true);
 
         telemetry.setMsTransmissionInterval(10);
 

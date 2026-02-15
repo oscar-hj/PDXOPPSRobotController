@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -30,7 +32,7 @@ public class MainTeleOp_2GP extends LinearOpMode {
 
         // Initialize spindex
         Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
-        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor", false);
+        spindex.init("spinMotor", "kickServo", "magneticSwitch", "distanceSensor", "transferMotor", true);
         ElapsedTime spindexTimer = new ElapsedTime();
 
         // Initialize Shooter
@@ -76,20 +78,33 @@ public class MainTeleOp_2GP extends LinearOpMode {
                     shooter.primeShooter(5000);
                 }
 
-                if(spindexTimer.time() > 0.2 && gamepad2.dpad_right){
+                if(spindexTimer.time() > 0.2 && gp2.DPR){
                     spindex.nextPos();
                     spindexTimer.reset();
                 }
+                if(gp2.DPU){
+                    spindex.kickBall();
+                }
+
                 spindex.intakeSpindex();
+                spindex.updateKicker();
                 spindex.goToPos(spindex.targetPos, true);
                 telemetry.addData("Target State", spindex.targetPos);
 
-                if(gp1.DPU){
-                    spindex.activateTransfer(true);
-                }else if(gp1.DPD){
-                    spindex.activateTransfer(false);
-                }else{
-                    spindex.deactivateTransfer();
+//                if(abs(gp2.RSY) > 0.01){
+//                    spindex.manualKickBall(gp2.RSY);
+//                }
+
+
+
+                if(gp2.A){
+                    spindex.runTransfer(1);
+                }else if(gp2.X){
+                    spindex.runTransfer(-1);
+                }
+
+                if (gp2.B){
+                    spindex.runTransfer(0);
                 }
 
 

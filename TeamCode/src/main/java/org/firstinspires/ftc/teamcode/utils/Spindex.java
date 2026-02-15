@@ -3,11 +3,12 @@ package org.firstinspires.ftc.teamcode.utils;
 import android.os.Environment;
 import android.util.Log;
 
-import com.qualcomm.robotcore.hardware.CRServo;
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -20,15 +21,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Locale;
 
+@Configurable
 public class Spindex {
     // Initialize sPID controller with sPID values
-    PIDController pidController = new PIDController(0, 2.5e-4, 6e-4, 1e-5);
+    public static double k = 0;
+    public static double p = 2.5e-4;
+    public static double i = 6e-4;
+    public static double d = 1e-5;
+    PIDController pidController = new PIDController(k, p, i, d);
     HardwareMap hardwareMap;
     Telemetry telemetry;
-    DcMotorEx spinMotor;
-    CRServo transferServo;
+    DcMotorEx spinMotor, transferMotor;
+    Servo kickServo;
     TouchSensor magneticSwitch;
-    DistanceSensor backSensor, frontSensor;
+    DistanceSensor distSensor;
     ElapsedTime ballTime = new ElapsedTime();
     Shooter shooter;
 
@@ -39,27 +45,32 @@ public class Spindex {
     public DriveTrain driveTrain;
     public SpindexState spindexState;
     public Offset targetPos;
+    public KickState kickState = KickState.IDLE;
+    public ElapsedTime kickTimer = new ElapsedTime();
 
     public enum SpindexState {
         INTAKING,
         SHOOTING,
         MOVING
     }
-
-    // Encoder offsets for spindex positions
     public enum Offset  {
-        STORE1(1200),
-        SHOOT1(3300),
-        STORE2(4100),
-        SHOOT2(6175),
-        STORE3(6800),
-        SHOOT3(8875);
+        // Encoder offsets for spindex positions
+        STORE1(600),
+        SHOOT1(2700),
+        STORE2(3200),
+        SHOOT2(5300),
+        STORE3(5900),
+        SHOOT3(8000);
 
         private final int offset;
         Offset(final int offset) { this.offset = offset; }
         public int getOffset() { return this.offset; }
     }
-
+    public enum KickState{
+        IDLE,
+        KICKING,
+        RETRACTING
+    }
     public Spindex(HardwareMap hwMp, Telemetry tele, Shooter shoot, DriveTrain drive){
         this.hardwareMap = hwMp;
         this.telemetry = tele;
@@ -78,18 +89,21 @@ public class Spindex {
     }
 
     // Initialize spindex
-    public void init(String spinMotorName, String transferServoName, String magneticSwitchName, String frontDistanceSensorName, String backDistanceSensorName, boolean doHome){
+    public void init(String spinMotorName, String kickServoName, String magneticSwitchName, String distanceSensorName, String transferMotorName, boolean doHome){
         spinMotor = hardwareMap.get(DcMotorEx.class, spinMotorName);
+        transferMotor = hardwareMap.get(DcMotorEx.class, transferMotorName);
         magneticSwitch = hardwareMap.get(TouchSensor.class, magneticSwitchName);
-        transferServo = hardwareMap.get(CRServo.class, transferServoName);
-        frontSensor = hardwareMap.get(DistanceSensor.class, frontDistanceSensorName);
-        backSensor = hardwareMap.get(DistanceSensor.class, backDistanceSensorName);
+        kickServo = hardwareMap.get(Servo.class, kickServoName);
+        distSensor = hardwareMap.get(DistanceSensor.class, distanceSensorName);
 
         spinMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spinMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        transferMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        transferMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Sets the target position to STORE1
         targetPos = Offset.STORE1;
+        kickState = KickState.IDLE;
 
         // Homes spindex, or load spindex value
         if(doHome){
@@ -131,7 +145,7 @@ public class Spindex {
 
         // Passes target and current pos to get power value from sPID controller
         double pidPower = -pidController.update(targetPos, currentPos, telemetry);
-        int tolerance = 50;  // in ticks
+        int tolerance = 25;  // in ticks
         telemetry.addData("PIDPower", pidPower);
 
         // If the spindex is inside the tolerance, stop moving
@@ -156,10 +170,14 @@ public class Spindex {
             }
         }
 
+        telemetry.addData("TargetPos", targetPos);
+        telemetry.addData("CurrentPos", currentPos);
+        telemetry.addData("Offset Value", targetPos-currentPos);
+
         this.targetPos = spinPos;
     }
 
-    // Switches to nex pos when called
+    // Switches to nex pos when called, used for testing or override
     public void nextPos(){
         switch (targetPos){
             case STORE1:
@@ -178,7 +196,7 @@ public class Spindex {
                 targetPos = Offset.STORE3;
                 break;
             case SHOOT3:
-                targetPos = Offset.STORE3;
+                targetPos = Offset.STORE1;
                 break;
         }
     }
@@ -193,7 +211,8 @@ public class Spindex {
     }
 
     public void intakeSpindex(){
-        if ((frontSensor.getDistance(DistanceUnit.INCH) < 2 || backSensor.getDistance(DistanceUnit.INCH) < 2) && !(spindexState == SpindexState.MOVING)){
+        telemetry.addData("Distance sensor", distSensor.getDistance(DistanceUnit.INCH));
+        if ((distSensor.getDistance(DistanceUnit.INCH) < 5) && !(spindexState == SpindexState.MOVING)){
             if(ballStoring){
                 if(ballTime.time() > 0.5) {
                     switch (targetPos) {
@@ -219,6 +238,8 @@ public class Spindex {
     }
 
     public void shootSpindex(int targetRPM){
+        if(spindexState != SpindexState.SHOOTING && !hasShot) return;
+
         telemetry.addData("Spindex State", spindexState);
         telemetry.addData("Spindex Pos", targetPos);
         if (!shooter.isAtRPM(targetRPM) && !atRPM){
@@ -234,44 +255,50 @@ public class Spindex {
 //        }
 
         // If RMP drops below some RPM then the shooter has shot
-        if(shooter.getRPM() < targetRPM * 0.8){
-            hasShot = true;
-        }
+//        if(shooter.getRPM() < targetRPM * 0.8){
+//            hasShot = true;
+//        }
 
         switch (targetPos){
             case SHOOT1:
-                if(!hasShot){
-                    activateTransfer(true);
-                }else{
-                    hasShot = false;
-                    atRPM = false;
+                if(this.kickState == KickState.IDLE && !hasShot){
+                    transferMotor.setPower(1);
+                    kickBall();
+                    hasShot = true;
+                }else if (this.kickState == KickState.IDLE){
+                    transferMotor.setPower(0);
                     targetPos = Offset.SHOOT2;
                     spindexState = SpindexState.MOVING;
-                    deactivateTransfer();
+                    atRPM = false;
+                    hasShot = false;
                 }
                 break;
 
             case SHOOT2:
-                if(!hasShot){
-                    activateTransfer(true);
-                }else{
-                    hasShot = false;
-                    atRPM = false;
+                if(this.kickState == KickState.IDLE && !hasShot){
+                    transferMotor.setPower(1);
+                    kickBall();
+                    hasShot = true;
+                }else if (this.kickState == KickState.IDLE){
+                    transferMotor.setPower(0);
                     targetPos = Offset.SHOOT3;
                     spindexState = SpindexState.MOVING;
-                    deactivateTransfer();
+                    atRPM = false;
+                    hasShot = false;
                 }
                 break;
 
             case SHOOT3:
-                if(!hasShot){
-                    activateTransfer(true);
-                }else{
-                    hasShot = false;
-                    atRPM = false;
-                    spindexState = SpindexState.MOVING;
+                if(this.kickState == KickState.IDLE && !hasShot){
+                    transferMotor.setPower(1);
+                    kickBall();
+                    hasShot = true;
+                }else if (this.kickState == KickState.IDLE){
+                    transferMotor.setPower(0);
                     targetPos = Offset.STORE1;
-                    deactivateTransfer();
+                    spindexState = SpindexState.MOVING;
+                    atRPM = false;
+                    hasShot = false;
                 }
                 break;
         }
@@ -306,16 +333,39 @@ public class Spindex {
         }
     }
 
-    public void activateTransfer(boolean direction){
-        if (direction){
-            transferServo.setPower(-1);
-        }else{
-            transferServo.setPower(1);
+    public void kickBall(){
+        if(this.kickState == KickState.IDLE){
+            kickServo.setPosition(0.2);
+            this.kickState = KickState.KICKING;
+            kickTimer.reset();
         }
     }
 
-    public void deactivateTransfer(){
-        transferServo.setPower(0);
+    public void manualKickBall(double power){
+        kickServo.setPosition(power);
     }
 
+    public void updateKicker(){
+        switch (this.kickState){
+            case IDLE:
+                break;
+            case KICKING:
+                if(kickTimer.time() > 0.15) {
+                    kickServo.setPosition(0.01);
+                    kickTimer.reset();
+                    this.kickState = KickState.RETRACTING;
+                }
+                break;
+            case RETRACTING:
+                if(kickTimer.time() > 0.15){
+                    kickTimer.reset();
+                    this.kickState = KickState.IDLE;
+                }
+                break;
+        }
+    }
+
+    public void runTransfer(double direction){
+       transferMotor.setPower(direction);
+    }
 }

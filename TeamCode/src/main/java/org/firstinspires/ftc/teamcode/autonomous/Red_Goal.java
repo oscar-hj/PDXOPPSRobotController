@@ -118,7 +118,7 @@ public class Red_Goal extends OpMode {
         shooter = new Shooter(hardwareMap, telemetry);
         spindex = new Spindex(hardwareMap, telemetry, shooter);
 
-        spindex.init("spinMotor", "transferServo", "magneticSwitch", "frontDistanceSensor", "backDistanceSensor", true);
+        spindex.init("spinMotor", "kickServo", "magneticSwitch", "distanceSensor", "transferMotor", true);
         shooter.init("shooterMotor", "hoodServo");
 
 

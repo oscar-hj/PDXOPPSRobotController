@@ -13,7 +13,7 @@ public class PIDController {
 
 
     private static final double I_MAX = 0.7; // Max value for integral
-    private static final double S_TOLERANCE = 75; // Tolerance to turn off static power in ticks
+    private static final double S_TOLERANCE = 5; // Tolerance to turn off static power in ticks
 
     // Sets sPID values when initializing
     public PIDController(double Ks, double Kp, double Ki, double Kd) {
