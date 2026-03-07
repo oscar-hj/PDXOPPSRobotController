@@ -45,15 +45,15 @@ public class MainTeleOp_2GP extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 //reads the gamepad inputs and assigns them to variables
-                gp1.readGP();
-                gp2.readGP();
+                gp1.update();
+                gp2.update();
 
                 // Updates pose for the follower
                 driveTrain.updatePose();
 
                 // Check driveMode of Drivetrain for auto position or operator driving
                 // Runs driving function on gp1
-                driveTrain.Drive2D();
+                driveTrain.Drive2D(gp1);
 
                 // Runs spindex
                 // spindex.intakeSpindex(true);

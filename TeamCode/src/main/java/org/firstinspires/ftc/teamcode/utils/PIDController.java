@@ -13,7 +13,6 @@ public class PIDController {
 
 
     private static final double I_MAX = 0.7; // Max value for integral
-    private static final double S_TOLERANCE = 5; // Tolerance to turn off static power in ticks
 
     // Sets sPID values when initializing
     public PIDController(double Ks, double Kp, double Ki, double Kd) {
@@ -24,7 +23,7 @@ public class PIDController {
     }
 
     // Gets the target position and the current position and returns output of sPID
-    public double update(double target, double currentPos, Telemetry telemetry) {
+    public double update(double target, double currentPos, double s_tolerance, Telemetry telemetry, boolean doTelemetry) {
         // Get delta time and reset timer, sets to 1ms if delta time is less
         double dt = timer.seconds();
         if (dt <= 0) dt = 1e-3;
@@ -61,7 +60,7 @@ public class PIDController {
         double output = proportional + integral + derivative;
 
         // Add power if out of tolerance
-        if(abs(error) > S_TOLERANCE){
+        if(abs(error) > s_tolerance){
             output += Ks * Math.signum(error);
         }
 
@@ -69,11 +68,13 @@ public class PIDController {
         output = clamp(output, -1, 1);
 
         // Output telemetry
-        telemetry.addData("Error", error);
-        telemetry.addData("P", proportional);
-        telemetry.addData("I", integral);
-        telemetry.addData("D", derivative);
-        telemetry.addData("Output", output);
+        if(doTelemetry) {
+            telemetry.addData("Error", error);
+            telemetry.addData("P", proportional);
+            telemetry.addData("I", integral);
+            telemetry.addData("D", derivative);
+            telemetry.addData("Output", output);
+        }
         return output;
     }
 

@@ -30,19 +30,70 @@ public class Blue_Goal extends OpMode {
 
     private final Pose startPose = new Pose(22, 125, Math.toRadians(144));
     private final Pose aimPose = new Pose(40, 95, Math.toRadians(135));
-    private final Pose clearPose = new Pose(50, 120, Math.toRadians(135));
+    private final Pose intakePose1 = new Pose(42, 78, Math.toRadians(180));
+    private final Pose collectPose1 = new Pose(20, 78, Math.toRadians(180));
+    private final Pose intakePose2 = new Pose(42, 54, Math.toRadians(180));
+    private final Pose collectPose2 = new Pose(20, 54, Math.toRadians(180));
+    private final Pose intakePose3 = new Pose(44, 30, Math.toRadians(180));
+    private final Pose collectPose3 = new Pose(20, 30, Math.toRadians(180));
+    private final Pose clearPose = new Pose(50, 120, Math.toRadians(180));
 
 
 //    private Path move1;
-    private PathChain move1, move2;
+    private PathChain gotoShoot1, gotoIntake1, gotoCollect1, gotoShoot2, gotoIntake2, gotoCollect2, gotoShoot3, gotoIntake3, gotoCollect3, gotoShoot4, gotoClear;
 
     public void buildPaths(){
-        move1 = follower.pathBuilder()
+        gotoShoot1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, aimPose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
                 .build();
 
-        move2 = follower.pathBuilder()
+        gotoIntake1 = follower.pathBuilder()
+                .addPath(new BezierLine(aimPose, intakePose1))
+                .setLinearHeadingInterpolation(aimPose.getHeading(), clearPose.getHeading())
+                .build();
+
+        gotoCollect1 = follower.pathBuilder()
+                .addPath(new BezierLine(intakePose1, collectPose1))
+                .setLinearHeadingInterpolation(intakePose1.getHeading(), collectPose1.getHeading())
+                .build();
+
+        gotoShoot2 = follower.pathBuilder()
+                .addPath(new BezierLine(collectPose1, aimPose))
+                .setLinearHeadingInterpolation(collectPose1.getHeading(), aimPose.getHeading())
+                .build();
+
+        gotoIntake2 = follower.pathBuilder()
+                .addPath(new BezierLine(aimPose, intakePose2))
+                .setLinearHeadingInterpolation(aimPose.getHeading(), intakePose2.getHeading())
+                .build();
+
+        gotoCollect2 = follower.pathBuilder()
+                .addPath(new BezierLine(intakePose2, collectPose2))
+                .setLinearHeadingInterpolation(intakePose2.getHeading(), collectPose2.getHeading())
+                .build();
+
+        gotoShoot3 = follower.pathBuilder()
+                .addPath(new BezierLine(collectPose2, aimPose))
+                .setLinearHeadingInterpolation(collectPose2.getHeading(), aimPose.getHeading())
+                .build();
+
+        gotoIntake3 = follower.pathBuilder()
+                .addPath(new BezierLine(aimPose, intakePose3))
+                .setLinearHeadingInterpolation(aimPose.getHeading(), intakePose3.getHeading())
+                .build();
+
+        gotoCollect3 = follower.pathBuilder()
+                .addPath(new BezierLine(intakePose3, collectPose3))
+                .setLinearHeadingInterpolation(intakePose3.getHeading(), collectPose3.getHeading())
+                .build();
+
+        gotoShoot4 = follower.pathBuilder()
+                .addPath(new BezierLine(collectPose3, aimPose))
+                .setLinearHeadingInterpolation(collectPose3.getHeading(), aimPose.getHeading())
+                .build();
+
+        gotoClear = follower.pathBuilder()
                 .addPath(new BezierLine(aimPose, clearPose))
                 .setLinearHeadingInterpolation(aimPose.getHeading(), clearPose.getHeading())
                 .build();
@@ -58,29 +109,106 @@ public class Blue_Goal extends OpMode {
 
         switch (pathState){
             case 0:
-                shooter.primeShooter(3500);
-                follower.followPath(move1, true);
+                shooter.primeShooter(2800);
+                follower.followPath(gotoShoot1);
                 setPathState(1);
                 break;
             case 1:
                 if(!follower.isBusy()){
-                    spindex.shootSpindex(3500);
+                    spindex.shootSpindex(2800, true);
                     if(spindex.targetPos == Spindex.Offset.STORE1){
+                        shooter.primeShooter(0);
+                        follower.followPath(gotoIntake1);
                         setPathState(2);
                     }
                 }
                 break;
             case 2:
-                shooter.primeShooter(0);
                 if(!follower.isBusy()){
-                    follower.followPath(move2);
+                    intake.forwardIntake();
+                    follower.followPath(gotoCollect1, 0.25, false);
                     setPathState(3);
                 }
                 break;
             case 3:
-                if(!follower.isBusy()){
-                    setPathState(-1);
+                spindex.intakeSpindex();
+                if(!follower.isBusy() || spindex.targetPos == Spindex.Offset.SHOOT1){
+                    intake.stopIntake();
+                    spindex.targetPos = Spindex.Offset.SHOOT1;
+                    shooter.primeShooter(2800);
+                    follower.followPath(gotoShoot2);
+                    setPathState(4);
                 }
+                break;
+            case 4:
+                if(!follower.isBusy()){
+                    spindex.shootSpindex(2800, true);
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
+                        shooter.primeShooter(0);
+                        follower.followPath(gotoIntake2);
+                        setPathState(5);
+                    }
+                }
+                break;
+            case 5:
+                if(!follower.isBusy()){
+                    intake.forwardIntake();
+                    follower.followPath(gotoCollect2, 0.25, false);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                spindex.intakeSpindex();
+                if(!follower.isBusy() || spindex.targetPos == Spindex.Offset.SHOOT1){
+                    intake.stopIntake();
+                    spindex.targetPos = Spindex.Offset.SHOOT1;
+                    shooter.primeShooter(2800);
+                    follower.followPath(gotoShoot3);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if(!follower.isBusy()){
+                    spindex.shootSpindex(2800, true);
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
+                        shooter.primeShooter(0);
+                        follower.followPath(gotoIntake3);
+                        setPathState(8);
+                    }
+                }
+                break;
+            case 8:
+                if(!follower.isBusy()){
+                    intake.forwardIntake();
+                    follower.followPath(gotoCollect3, 0.25, false);
+                    setPathState(9);
+                }
+                break;
+            case 9:
+                spindex.intakeSpindex();
+                if(!follower.isBusy() || spindex.targetPos == Spindex.Offset.SHOOT1){
+                    intake.stopIntake();
+                    spindex.targetPos = Spindex.Offset.SHOOT1;
+                    shooter.primeShooter(2800);
+                    follower.followPath(gotoShoot4);
+                    setPathState(10);
+                }
+                break;
+            case 10:
+                if(!follower.isBusy()){
+                    spindex.shootSpindex(2800, true);
+                    if(spindex.targetPos == Spindex.Offset.STORE1){
+                        shooter.primeShooter(0);
+                        follower.followPath(gotoClear, 1, true);
+                        setPathState(11);
+                    }
+                }
+                break;
+            case 11:
+                if(!follower.isBusy()){
+                    stop();
+                }
+                break;
         }
     }
 
@@ -88,6 +216,7 @@ public class Blue_Goal extends OpMode {
     @Override
     public void loop(){
         follower.update();
+        spindex.updateKicker();
         autonomousPathUpdate();
 
         telemetry.addData("path state", pathState);
@@ -114,7 +243,7 @@ public class Blue_Goal extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
+        follower = Constants.createFollower(hardwareMap, "fl", "fr", "bl", "br");
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -122,6 +251,7 @@ public class Blue_Goal extends OpMode {
         shooter = new Shooter(hardwareMap, telemetry);
         spindex = new Spindex(hardwareMap, telemetry, shooter);
 
+        intake.init("intakeMotor");
         spindex.init("spinMotor", "kickServo", "magneticSwitch", "distanceSensor", "transferMotor", true);
         shooter.init("shooterMotor", "hoodServo");
 
@@ -146,7 +276,7 @@ public class Blue_Goal extends OpMode {
 
     @Override
     public void stop(){
-        driveTrain.savePose();
+        driveTrain.savePose(follower);
     }
 }
 

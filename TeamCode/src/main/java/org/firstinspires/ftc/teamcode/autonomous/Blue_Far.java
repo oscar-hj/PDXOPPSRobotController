@@ -32,14 +32,14 @@ public class Blue_Far extends OpMode {
     private final Pose startPose = new Pose(55.5, 7.5, Math.toRadians(90));
     private final Pose aimPose = new Pose(55.5, 12, Math.toRadians(115));
     private final Pose clearPose = new Pose(43.5, 20, Math.toRadians(180));
-    private PathChain /*move1,*/ move2, move3;
+    private PathChain move1, move2, move3;
 
     // Builds the paths
     public void buildPaths(){
-        // move1 = follower.pathBuilder()
-        //         .addPath(new BezierLine(startPose, aimPose))
-        //         .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
-        //         .build();
+         move1 = follower.pathBuilder()
+                 .addPath(new BezierLine(startPose, aimPose))
+                 .setLinearHeadingInterpolation(startPose.getHeading(), aimPose.getHeading())
+                 .build();
 
         move2 = follower.pathBuilder()
                 .addPath(new BezierLine(aimPose, clearPose))
@@ -64,13 +64,13 @@ public class Blue_Far extends OpMode {
 
         switch (pathState){
             case 0:
-//                shooter.primeShooter(5100);
-                follower.followPath(move3, true);
-                setPathState(3);
+                shooter.primeShooter(3600);
+                follower.followPath(move1, true);
+                setPathState(1);
                 break;
             case 1:
                 if(!follower.isBusy()){
-                    spindex.shootSpindex(5100);
+                    spindex.shootSpindex(3600, true);
                     if(spindex.targetPos == Spindex.Offset.STORE1){
                         setPathState(2);
                     }
@@ -95,6 +95,7 @@ public class Blue_Far extends OpMode {
     public void loop(){
         follower.update();
         autonomousPathUpdate();
+        spindex.updateKicker();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
@@ -120,7 +121,7 @@ public class Blue_Far extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
+        follower = Constants.createFollower(hardwareMap, "fl", "fr", "bl", "br");
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -152,7 +153,7 @@ public class Blue_Far extends OpMode {
 
     @Override
     public void stop(){
-        driveTrain.savePose();
+        driveTrain.savePose(follower);
     }
 }
 

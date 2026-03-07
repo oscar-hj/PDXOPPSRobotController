@@ -24,9 +24,9 @@ import java.util.Locale;
 @Configurable
 public class Spindex {
     // Initialize sPID controller with sPID values
-    public static double k = 0;
+    public static double k = 0.02;
     public static double p = 2.5e-4;
-    public static double i = 6e-4;
+    public static double i = 8e-4;
     public static double d = 1e-5;
     PIDController pidController = new PIDController(k, p, i, d);
     HardwareMap hardwareMap;
@@ -36,17 +36,20 @@ public class Spindex {
     TouchSensor magneticSwitch;
     DistanceSensor distSensor;
     ElapsedTime ballTime = new ElapsedTime();
+    ElapsedTime kickTimer = new ElapsedTime();
+    ElapsedTime spoolTimer = new ElapsedTime();
     Shooter shooter;
 
     public boolean ballStoring = false;
     public boolean hasShot = false;
     public boolean atRPM = false;
+    public boolean atCollection = false;
+    public boolean allowShoot = false;
     public int homeValue;
     public DriveTrain driveTrain;
     public SpindexState spindexState;
     public Offset targetPos;
     public KickState kickState = KickState.IDLE;
-    public ElapsedTime kickTimer = new ElapsedTime();
 
     public enum SpindexState {
         INTAKING,
@@ -104,6 +107,8 @@ public class Spindex {
         // Sets the target position to STORE1
         targetPos = Offset.STORE1;
         kickState = KickState.IDLE;
+        kickServo.setPosition(0.01);
+        hasShot = false;
 
         // Homes spindex, or load spindex value
         if(doHome){
@@ -144,8 +149,8 @@ public class Spindex {
         int currentPos = spinMotor.getCurrentPosition();
 
         // Passes target and current pos to get power value from sPID controller
-        double pidPower = -pidController.update(targetPos, currentPos, telemetry);
-        int tolerance = 25;  // in ticks
+        double pidPower = -pidController.update(targetPos, currentPos, 50, telemetry, false);
+        int tolerance = 50;  // in ticks
         telemetry.addData("PIDPower", pidPower);
 
         // If the spindex is inside the tolerance, stop moving
@@ -211,21 +216,25 @@ public class Spindex {
     }
 
     public void intakeSpindex(){
+        if(spindexState == SpindexState.INTAKING) atCollection = true;
         telemetry.addData("Distance sensor", distSensor.getDistance(DistanceUnit.INCH));
-        if ((distSensor.getDistance(DistanceUnit.INCH) < 5) && !(spindexState == SpindexState.MOVING)){
+        if ((distSensor.getDistance(DistanceUnit.INCH) < 5) && atCollection){
             if(ballStoring){
-                if(ballTime.time() > 0.5) {
+                if(ballTime.time() > 0.1) {
                     switch (targetPos) {
                         case STORE1:
                             targetPos = Offset.STORE2;
+                            atCollection = false;
                             ballStoring = false;
                             break;
                         case STORE2:
                             targetPos = Offset.STORE3;
+                            atCollection = false;
                             ballStoring = false;
                             break;
                         case STORE3:
                             targetPos = Offset.SHOOT1;
+                            atCollection = false;
                             ballStoring = false;
                             break;
                     }
@@ -237,8 +246,9 @@ public class Spindex {
         }
     }
 
-    public void shootSpindex(int targetRPM){
+    public void shootSpindex(int targetRPM, boolean fastShoot){
         if(spindexState != SpindexState.SHOOTING && !hasShot) return;
+        if(!fastShoot) if(!allowShoot) return;
 
         telemetry.addData("Spindex State", spindexState);
         telemetry.addData("Spindex Pos", targetPos);
@@ -247,17 +257,6 @@ public class Spindex {
         }else{
             atRPM = true;
         }
-
-
-        // If the spindex is not in position to shoot, don't run the function.
-//        if(spindexState != SpindexState.SHOOTING){
-//            return;
-//        }
-
-        // If RMP drops below some RPM then the shooter has shot
-//        if(shooter.getRPM() < targetRPM * 0.8){
-//            hasShot = true;
-//        }
 
         switch (targetPos){
             case SHOOT1:
@@ -271,6 +270,7 @@ public class Spindex {
                     spindexState = SpindexState.MOVING;
                     atRPM = false;
                     hasShot = false;
+                    allowShoot = false;
                 }
                 break;
 
@@ -285,6 +285,7 @@ public class Spindex {
                     spindexState = SpindexState.MOVING;
                     atRPM = false;
                     hasShot = false;
+                    allowShoot = false;
                 }
                 break;
 
@@ -299,10 +300,12 @@ public class Spindex {
                     spindexState = SpindexState.MOVING;
                     atRPM = false;
                     hasShot = false;
+                    allowShoot = false;
                 }
                 break;
         }
     }
+
 
     public void saveHome(){
         String path = Environment.getExternalStorageDirectory().getPath() + "/FIRST/home.txt";
@@ -346,6 +349,8 @@ public class Spindex {
     }
 
     public void updateKicker(){
+//        telemetry.addData("Kick State", kickState);
+
         switch (this.kickState){
             case IDLE:
                 break;

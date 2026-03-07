@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import static java.lang.Math.abs;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 import org.firstinspires.ftc.teamcode.utils.DriveTrain;
 import org.firstinspires.ftc.teamcode.utils.GP;
 import org.firstinspires.ftc.teamcode.utils.Intake;
@@ -9,16 +12,12 @@ import org.firstinspires.ftc.teamcode.utils.Shooter;
 import org.firstinspires.ftc.teamcode.utils.Spindex;
 import org.firstinspires.ftc.teamcode.utils.TheLimeLight;
 
-import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-@Configurable
-@TeleOp(name = "Class Test")
-public class ClassTest extends LinearOpMode {
-    public static int shooterRPM = 0;
-    boolean shootingActive, canShoot = false;
+@TeleOp(name = "JacksonControl")
+public class JacksonControl extends LinearOpMode {
+    public int shooterRPM = 0;
+    boolean shootingActive = false;
     int spindexSpeed = 0;
+
     @Override
     public void runOpMode(){
         // telemetry.setMsTransmissionInterval(20);
@@ -46,31 +45,24 @@ public class ClassTest extends LinearOpMode {
         GP gp1 = new GP(gamepad1);
         GP gp2 = new GP(gamepad2);
 
-
         waitForStart();
         if(opModeIsActive()){
             while (opModeIsActive()){
-                //reads the gamepad inputs and assigns them to variables
                 gp1.update();
                 gp2.update();
 
-                // Updates pose for the follower
-                driveTrain.updatePose();
-
-                // Check driveMode of Drivetrain for auto position or operator driving
                 if(driveTrain.driveMode == DriveTrain.DriveMode.OP_DRIVE){
-                    // Sets shooting false for next shooting run and deactivates shooter
                     shootingActive = false;
                     spindexSpeed = 0;
                     shooter.primeShooter(0);
 
-                    // Runs driving function on gp1
-                    driveTrain.Drive2D(gp1);
+                    // Runs driving function on gp2
+                    driveTrain.Drive2D(gp2);
 
                     // Manually activate/deactivate intake
-                    if(gp1.RT > 0.05){
+                    if(gp2.RT > 0.05){
                         intake.forwardIntake();
-                    }else if(gp1.LT > 0.05){
+                    }else if(gp2.LT > 0.05){
                         intake.backwardsIntake();
                     }else {
                         intake.stopIntake();
@@ -84,16 +76,16 @@ public class ClassTest extends LinearOpMode {
                     telemetry.addData("Current Position", spindex.targetPos);
 
                     // Overwrites spindex to go into shooting mode
-                    if(gp1.PS){
+                    if(gp2.PS){
                         spindex.targetPos = Spindex.Offset.SHOOT1;
                     }
-                // Activates when spindex detects when 3 balls are in the spindex
+
                 }else if(driveTrain.driveMode == DriveTrain.DriveMode.AUTO_POS){
                     // Runs driving function with automatic alignment on gp1
                     driveTrain.Drive2DWithAlign(limeLight.getTargetXOffset() - 0.5, gp1);
 
                     // Can run intake backwards in case the robot intakes 4 balls
-                    if(gp1.LT > 0.05){
+                    if(gp2.LT > 0.05){
                         intake.backwardsIntake();
                     }else{
                         intake.stopIntake();
@@ -114,13 +106,13 @@ public class ClassTest extends LinearOpMode {
                     spindex.goToPos(spindex.targetPos, true);
                     spindex.updateKicker();
 
-                    // D-Pad up is far shooting, D-Pad down in close shooting, PS to turn off
-                    if(gamepad1.dpad_up){
+                    // shoot with A, stop with B
+                    if(gp1.A){
                         spindexSpeed = shooterRPM;
-                        canShoot = true;
+                        spindex.allowShoot = true;
                         shootingActive = true;
                     }
-                    if(gp1.DPD){
+                    if(gp1.B){
                         spindexSpeed = 0;
                         shootingActive = false;
                     }
@@ -128,22 +120,14 @@ public class ClassTest extends LinearOpMode {
                     // Runs shooter and spindex with ability to override spindex PID
                     if(shootingActive && abs(gp2.LSX) < 0.1){
                         shooter.primeShooter(spindexSpeed);
-                        spindex.shootSpindex(spindexSpeed, canShoot);
-                        canShoot = false;
+                        spindex.shootSpindex(spindexSpeed, false);
                     }else{
                         shooter.primeShooter(spindexSpeed);
                         spindex.manualSpindex(-gp2.LSX);
                     }
                 }
-
-                // Update telemetry
                 telemetry.update();
             }
-
-            limeLight.stop();
-            // saves the pose to use in another program
-            driveTrain.savePose(driveTrain.follower);
         }
     }
-
 }

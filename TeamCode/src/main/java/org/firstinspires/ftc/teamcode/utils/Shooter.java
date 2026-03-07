@@ -17,10 +17,11 @@ public class Shooter {
     Telemetry telemetry;
     DcMotorEx shooterMotor;
     CRServo hoodAngleServo;
+    InterpLUT lookUpTable = new InterpLUT();
 
-    public static double P = 150;
-    public static double I = 6.5;
-    public static double D = 20;
+    public static double P = 200;
+    public static double I = 1.5;
+    public static double D = 10;
     public static double F = 0.7;
 
     public Shooter(HardwareMap hwm, Telemetry tel){
@@ -35,6 +36,8 @@ public class Shooter {
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         hoodAngleServo = hardwareMap.get(CRServo.class, hoodServoName);
+
+        createPoints();
     }
 
     // Sets the shooter's RPM
@@ -68,5 +71,34 @@ public class Shooter {
 
     public boolean isAtRPM(int targetRPM){
         return getRPM() > targetRPM;
+    }
+
+    public void createPoints(){
+        this.lookUpTable.add(34, 2800);
+        this.lookUpTable.add(40, 2900);
+        this.lookUpTable.add(55, 3100);
+        this.lookUpTable.add(60, 3200);
+        this.lookUpTable.add(70, 3300);
+    }
+
+
+    public int LUTToRPM(double distance){
+        return (int) this.lookUpTable.get(distance);
+    }
+
+    public int distanceToRPM(double distance){
+        if(distance < 40){
+            return 2900;
+        }else if(distance < 55){
+            return 3000;
+        }else if(distance < 60){
+            return 3100;
+        }else if(distance < 70){
+            return 3200;
+        }else if(distance > 70){
+            return 3300;
+        }else{
+            return 2800;
+        }
     }
 }

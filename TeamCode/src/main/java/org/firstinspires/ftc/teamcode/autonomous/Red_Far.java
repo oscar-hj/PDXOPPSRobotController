@@ -28,7 +28,7 @@ public class Red_Far extends OpMode {
 
     private final Pose startPose = new Pose(88.5, 7.5, Math.toRadians(90));
     private final Pose aimPose = new Pose(88.5, 12, Math.toRadians(90));
-    private final Pose clearPose = new Pose(76.5, 20, Math.toRadians(0));
+    private final Pose clearPose = new Pose(108, 10, Math.toRadians(90));
 
 
 //    private Path move1;
@@ -67,7 +67,7 @@ public class Red_Far extends OpMode {
                 break;
             case 1:
                 if(!follower.isBusy()){
-                    spindex.shootSpindex(5100);
+                    spindex.shootSpindex(5100, true);
                     if(spindex.targetPos == Spindex.Offset.STORE1){
                         setPathState(2);
                     }
@@ -117,7 +117,7 @@ public class Red_Far extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap, "flm", "frm", "blm", "brm");
+        follower = Constants.createFollower(hardwareMap, "fl", "fr", "bl", "br");
         buildPaths();
         follower.setStartingPose(startPose);
 

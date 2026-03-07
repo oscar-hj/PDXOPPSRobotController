@@ -11,7 +11,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Locale;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -22,15 +24,23 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.pedropathing.geometry.Pose;
 
 
+@Configurable
 public class DriveTrain {
     public enum DriveMode{
         OP_DRIVE,
         AUTO_POS
     }
+
+    static public double k = 0.05;
+    static public double p = 0.007;
+    static public double i = 0;
+    static public double d = 0;
     public DriveMode driveMode;
     public Follower follower;
     public HardwareMap hardwareMap;
     public Telemetry telemetry;
+    public PathChain path;
+    public PIDController anglePID = new PIDController(0, 0, 0, 0);
     public Gamepad gamepad;
     public static DcMotor frontLeft, frontRight, backLeft, backRight;
     public static double deadzone = 0.05;
@@ -102,21 +112,21 @@ public class DriveTrain {
      * Left stick drives the robot front, back, side to side, and diagonally. Right stick rotates
      * the robot. Left bumper activates slow mode, right bumper activates boost mode.
      */
-    public void Drive2D(){
+    public void Drive2D(GP gp){
         double speed;
-        double valx = gamepad.left_stick_x;
-        double valy = gamepad.left_stick_y;
-        double valr = gamepad.right_stick_x;
+        double valx = gp.LSX;
+        double valy = gp.LSY;
+        double valr = gp.RSX;
 
-        if(gamepad.left_bumper){
+        if(gp.LB){
             // slow speed
-            speed = 0.1;
-        } else if (gamepad.right_bumper) {
+            speed = -0.1;
+        } else if (gp.RB) {
             // boost speed
-            speed = 1;
+            speed = -1;
         } else {
             // normal speed
-            speed = 0.7;
+            speed = -0.7;
         }
 
         if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valr) > deadzone) {
@@ -130,6 +140,74 @@ public class DriveTrain {
             backLeft.setPower(0);
             backRight.setPower(0);
         }
+    }
+
+    public void Drive2DWithAlign(double angleDifference, GP gp){
+        double speed;
+        double valx = gp.LSX;
+        double valy = gp.LSY;
+        double valr = gp.RSX;
+
+        if(gp.LB){
+            // slow speed
+            speed = 0.1;
+        } else if (gp.RB) {
+            // boost speed
+            speed = 1;
+        } else {
+            // normal speed
+            speed = 0.7;
+        }
+
+        double currAngle = Math.toDegrees(follower.getPose().getHeading());
+        double targetAngle = currAngle - angleDifference;
+
+        anglePID = new PIDController(k, p, i, d);
+
+        // PID for wheels, tolerance in degrees
+        double wheelPower = -anglePID.update(targetAngle, currAngle, 0.5, telemetry, false);
+
+        if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valr) > deadzone | abs(wheelPower) > 0.05) {
+            frontLeft.setPower(-((valy - valx - valr) * speed) + wheelPower);
+            frontRight.setPower(-((valy + valx + valr) * speed) - wheelPower);
+            backLeft.setPower(-((valy + valx - valr) * speed) + wheelPower);
+            backRight.setPower(-((valy - valx + valr) * speed) - wheelPower);
+        } else{
+            frontLeft.setPower(0);
+            frontRight.setPower(0);
+            backLeft.setPower(0);
+            backRight.setPower(0);
+        }
+    }
+
+//    public void selfAlign(double angleDifference){
+//        double x = follower.getPose().getX();
+//        double y = follower.getPose().getY();
+//        double currAngle = follower.getPose().getHeading();
+//        double targetAngle = currAngle - Math.toRadians(angleDifference);
+//
+//        path = follower.pathBuilder()
+//                .addPath(new Path(new BezierLine(follower::getPose, new Pose(x, y, targetAngle))))
+//                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, targetAngle, 0.8))
+//                .build();
+//
+//        follower.followPath(path, true);
+////        follower.setTeleOpDrive(0, 0, targetAngle, false);
+//        follower.update();
+//    }
+
+    public void selfAlign(double angleDifference){
+        double currAngle = follower.getPose().getHeading();
+        double targetAngle = currAngle - Math.toRadians(angleDifference);
+
+        anglePID = new PIDController(k, p, i, d);
+
+        double wheelPower = -anglePID.update(targetAngle, currAngle, 0.5, telemetry, true);
+
+        frontLeft.setPower(wheelPower);
+        backLeft.setPower(wheelPower);
+        frontRight.setPower(-wheelPower);
+        backRight.setPower(-wheelPower);
     }
 
 //    public void Drive2DField(){
@@ -217,14 +295,14 @@ public class DriveTrain {
 
     public void updatePose(){
         follower.update();
-        telemetry.addData("Pose", follower.getPose());
+//        telemetry.addData("Pose", follower.getPose());
     }
 
-    public void savePose(){
+    public void savePose(Follower follow){
         String path = Environment.getExternalStorageDirectory().getPath() + "/FIRST/pose.txt";
-        double x = follower.getPose().getX();
-        double y = follower.getPose().getY();
-        double h = follower.getPose().getHeading();
+        double x = follow.getPose().getX();
+        double y = follow.getPose().getY();
+        double h = follow.getPose().getHeading();
 
         String output = String.format(Locale.ENGLISH, "%f,%f,%f", x, y, h);
 

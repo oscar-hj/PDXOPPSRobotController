@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.teleop;
+package org.firstinspires.ftc.teamcode.testcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -46,11 +46,11 @@ public class ShootingDistanceTest extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 //reads the gamepad inputs and assigns them to variables
-                gp1.readGP();
-                gp2.readGP();
+                gp1.update();
+                gp2.update();
 
                 // Runs driving function on gp1
-                driveTrain.Drive2D();
+                driveTrain.Drive2D(gp1);
 
                 // Shooter functions
                 if(gp1.DPU){

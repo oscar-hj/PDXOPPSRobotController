@@ -10,7 +10,7 @@ public class GP {
     public GP(Gamepad gp){
         gamepad = gp;
     }
-    public void readGP(){
+    public void update(){
         this.LSX = gamepad.left_stick_x;
         LSY = gamepad.left_stick_y;
         RSX = gamepad.right_stick_x;
