@@ -13,7 +13,6 @@ import java.util.Locale;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -35,11 +34,11 @@ public class DriveTrain {
     static public double p = 0.007;
     static public double i = 0;
     static public double d = 0;
+    public double speedSlow, speedNorm, speedFast;
     public DriveMode driveMode;
     public Follower follower;
     public HardwareMap hardwareMap;
     public Telemetry telemetry;
-    public PathChain path;
     public PIDController anglePID = new PIDController(0, 0, 0, 0);
     public Gamepad gamepad;
     public static DcMotor frontLeft, frontRight, backLeft, backRight;
@@ -52,10 +51,14 @@ public class DriveTrain {
      * @param gp1     Takes the gamepad that is used to drive the robot (gamepad1)
      * @param tel     Takes the telemetry for the opMode
      */
-    public DriveTrain(HardwareMap hwMap, Gamepad gp1, Telemetry tel) {
+    public DriveTrain(HardwareMap hwMap, Gamepad gp1, Telemetry tel, double slow, double norm, double fast) {
         this.hardwareMap = hwMap;
         this.gamepad = gp1;
         this.telemetry = tel;
+
+        this.speedSlow = -slow;
+        this.speedNorm = -norm;
+        this.speedFast = -fast;
     }
 
     /**
@@ -120,13 +123,13 @@ public class DriveTrain {
 
         if(gp.LB){
             // slow speed
-            speed = -0.1;
+            speed = speedSlow;
         } else if (gp.RB) {
             // boost speed
-            speed = -1;
+            speed = speedFast;
         } else {
             // normal speed
-            speed = -0.7;
+            speed = speedNorm;
         }
 
         if(abs(valx) > deadzone | abs(valy) > deadzone | abs(valr) > deadzone) {
@@ -150,13 +153,13 @@ public class DriveTrain {
 
         if(gp.LB){
             // slow speed
-            speed = 0.1;
+            speed = -speedSlow;
         } else if (gp.RB) {
             // boost speed
-            speed = 1;
+            speed = -speedFast;
         } else {
             // normal speed
-            speed = 0.7;
+            speed = -speedNorm;
         }
 
         double currAngle = Math.toDegrees(follower.getPose().getHeading());
@@ -196,19 +199,19 @@ public class DriveTrain {
 //        follower.update();
 //    }
 
-    public void selfAlign(double angleDifference){
-        double currAngle = follower.getPose().getHeading();
-        double targetAngle = currAngle - Math.toRadians(angleDifference);
-
-        anglePID = new PIDController(k, p, i, d);
-
-        double wheelPower = -anglePID.update(targetAngle, currAngle, 0.5, telemetry, true);
-
-        frontLeft.setPower(wheelPower);
-        backLeft.setPower(wheelPower);
-        frontRight.setPower(-wheelPower);
-        backRight.setPower(-wheelPower);
-    }
+//    public void selfAlign(double angleDifference){
+//        double currAngle = follower.getPose().getHeading();
+//        double targetAngle = currAngle - Math.toRadians(angleDifference);
+//
+//        anglePID = new PIDController(k, p, i, d);
+//
+//        double wheelPower = -anglePID.update(targetAngle, currAngle, 0.5, telemetry, true);
+//
+//        frontLeft.setPower(wheelPower);
+//        backLeft.setPower(wheelPower);
+//        frontRight.setPower(-wheelPower);
+//        backRight.setPower(-wheelPower);
+//    }
 
 //    public void Drive2DField(){
 //        double speed;

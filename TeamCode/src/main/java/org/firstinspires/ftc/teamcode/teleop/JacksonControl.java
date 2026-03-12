@@ -22,7 +22,7 @@ public class JacksonControl extends LinearOpMode {
     public void runOpMode(){
         // telemetry.setMsTransmissionInterval(20);
         // Makes a DriveTrain object, loads the pose, and PedroPathing follower (for tracking pose).
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry, 0.4, 0.4, 0.4);
         driveTrain.init("fl", "fr", "bl", "br");
 
         // initialize the intake class

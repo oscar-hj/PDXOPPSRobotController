@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import static java.lang.Math.abs;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -23,7 +21,7 @@ public class MainTeleOp_2GP extends LinearOpMode {
         GP gp2 = new GP(gamepad2);
 
         // Initialize drive train
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry, 0.1, 0.7, 1);
         driveTrain.init("fl", "fr", "bl", "br");
 
         // Initialize intake

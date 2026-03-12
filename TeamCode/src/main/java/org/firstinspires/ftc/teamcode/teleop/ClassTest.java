@@ -23,7 +23,7 @@ public class ClassTest extends LinearOpMode {
     public void runOpMode(){
         // telemetry.setMsTransmissionInterval(20);
         // Makes a DriveTrain object, loads the pose, and PedroPathing follower (for tracking pose).
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry, 0.1, 0.7, 1);
         driveTrain.init("fl", "fr", "bl", "br");
 
         // initialize the intake class

@@ -27,7 +27,7 @@ public class ShootingDistanceTest extends LinearOpMode {
 
 
         // Initialize drive train
-        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry);
+        DriveTrain driveTrain = new DriveTrain(hardwareMap, gamepad1, telemetry, 0.1, 0.7, 1);
         driveTrain.init("fl", "fr", "bl", "br");
 
         Spindex spindex = new Spindex(hardwareMap, telemetry, driveTrain);
