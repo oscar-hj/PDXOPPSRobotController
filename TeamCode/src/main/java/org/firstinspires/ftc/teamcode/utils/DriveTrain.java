@@ -56,9 +56,9 @@ public class DriveTrain {
         this.gamepad = gp1;
         this.telemetry = tel;
 
-        this.speedSlow = -slow;
-        this.speedNorm = -norm;
-        this.speedFast = -fast;
+        this.speedSlow = slow;
+        this.speedNorm = norm;
+        this.speedFast = fast;
     }
 
     /**
