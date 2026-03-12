@@ -82,8 +82,12 @@ public class JacksonControl extends LinearOpMode {
 
                 }else if(driveTrain.driveMode == DriveTrain.DriveMode.AUTO_POS){
                     // Runs driving function with automatic alignment on gp1
-                    driveTrain.Drive2D(gp2);
-                    driveTrain.Drive2DWithAlign(limeLight.getTargetXOffset() - 0.5, gp1);
+
+                    if(abs(gp2.LSX) > 0.1 || abs(gp2.LSY) > 0.1 || abs(gp2.RSX) > 0.1){
+                        driveTrain.Drive2D(gp2);
+                    }else{
+                        driveTrain.Drive2DWithAlign(limeLight.getTargetXOffset() - 0.5, gp1);
+                    }
 
                     // Can run intake backwards in case the robot intakes 4 balls
                     if(gp2.LT > 0.05){
